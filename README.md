@@ -21,6 +21,23 @@ pip install -r SVC_PC_View/requirements.txt
 bash SVC_PC_View/run_app_socket.sh 8080 0
 ```
 
+## CI / Workflow（同时构建 KPM + APK）
+
+- GitHub Actions：`.github/workflows/build-kpm-apk.yml`
+- CI 与本地共用构建脚本：`scripts/ci/build_kpm_and_apk.sh`
+
+本地按 CI 同逻辑执行：
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export PATH="$JAVA_HOME/bin:$PATH"
+export ANDROID_SDK_ROOT=/path/to/android-sdk
+export ANDROID_HOME="$ANDROID_SDK_ROOT"
+export KP_DIR=/path/to/SVCMonitors/KernelPatch
+
+./scripts/ci/build_kpm_and_apk.sh
+```
+
 ## 功能特点
 
 - **全量 NR 支持**：可在 App 里按 NR/名称筛选并启用/禁用（默认不预选任何 NR）
