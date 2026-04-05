@@ -837,10 +837,10 @@ textarea { resize: vertical; min-height: 100px; }
 <div class="tab-content" id="tab-detect-reverser">
   <!-- Control Panel -->
   <div class="card">
-    <div class="card-title">🔬 Detection Reverser — 逆向壳的检测行为</div>
+    <div class="card-title">🔬 Detection Reverser — Reverse Shell Detection Behavior</div>
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
-      通过 syscall hook 解引用寄存器和栈指针，自动捕获壳的检测函数正在搜索的字符串（needle）。<br/>
-      不需要 hook libc，不需要知道壳用什么函数实现 —— 只要它做 syscall，我们就能看到它手里拿着什么。
+      Dereference registers and stack pointers via syscall hooks to automatically capture strings (needles) searched by shell detection routines.<br/>
+      No libc hooks needed, and no need to know which function the shell uses — as long as it performs syscalls, we can observe what it is holding.
     </p>
     <div class="toolbar">
       <button class="btn btn-primary" onclick="drEnable()">▶ Enable</button>
@@ -893,7 +893,7 @@ textarea { resize: vertical; min-height: 100px; }
       <span class="badge badge-red" id="drNeedleCount">0</span>
     </div>
     <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">
-      这些是壳的检测函数在搜索时手里拿着的字符串。点击 PC 地址可跳转到 Disassembler 分析检测函数。
+      These are strings held by shell detection routines while searching. Click a PC address to jump to Disassembler for analysis.
     </p>
     <div id="drNeedleList">
       <div style="color:var(--text-muted);text-align:center;padding:40px;">
@@ -922,13 +922,13 @@ textarea { resize: vertical; min-height: 100px; }
     <div class="card">
       <div class="card-title" style="font-size:13px;">🔧 Generate Frida Patch</div>
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
-        基于捕获到的 needle 自动生成 Frida 脚本来绕过检测
+        Auto-generate a Frida script from captured needles to bypass detection
       </p>
       <div class="toolbar" style="flex-wrap:wrap;gap:6px;">
         <select class="select" id="drPatchMode" style="width:180px;">
-          <option value="nop_return">NOP Return (跳过检测函数)</option>
-          <option value="replace_needle">Replace Needle (覆写字符串)</option>
-          <option value="hook_strcmp">Hook Search Func (替换搜索结果)</option>
+          <option value="nop_return">NOP Return (skip detection function)</option>
+          <option value="replace_needle">Replace Needle (overwrite string)</option>
+          <option value="hook_strcmp">Hook Search Func (replace search result)</option>
         </select>
         <button class="btn btn-primary btn-sm" onclick="drGenPatch()">Generate Script</button>
       </div>
@@ -937,7 +937,7 @@ textarea { resize: vertical; min-height: 100px; }
     <div class="card">
       <div class="card-title" style="font-size:13px;">📝 Raw kpmctl Output</div>
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
-        直接查看 kpmctl 命令的原始输出
+        View raw kpmctl command output directly
       </p>
       <div class="toolbar" style="gap:6px;">
         <select class="select" id="drRawCmd" style="width:200px;">

@@ -40,7 +40,7 @@ import java.util.ArrayDeque
 /**
  * MainActivity — 4-tab UI built programmatically (no XML layouts).
  *
- * Tabs: 监控 | 过滤 | 事件 | 设置
+ * Tabs: Monitor | Filter | Events | Settings
  *
  * CRITICAL: All tab views are pre-built in onCreate() BEFORE observeViewModel()
  *           to avoid UninitializedPropertyAccessException on lateinit properties.
@@ -243,17 +243,17 @@ class MainActivity : AppCompatActivity() {
         tabHost.setup()
 
         // Add tabs with pre-built views
-        tabHost.addTab(tabHost.newTabSpec("dashboard").setIndicator("监控").setContent { dashboard })
-        tabHost.addTab(tabHost.newTabSpec("filter").setIndicator("过滤").setContent { filter })
-        tabHost.addTab(tabHost.newTabSpec("events").setIndicator("事件").setContent { events })
-        tabHost.addTab(tabHost.newTabSpec("thread").setIndicator("线程").setContent { thread })
-        tabHost.addTab(tabHost.newTabSpec("settings").setIndicator("设置").setContent { settings })
+        tabHost.addTab(tabHost.newTabSpec("dashboard").setIndicator("Monitor").setContent { dashboard })
+        tabHost.addTab(tabHost.newTabSpec("filter").setIndicator("Filter").setContent { filter })
+        tabHost.addTab(tabHost.newTabSpec("events").setIndicator("Events").setContent { events })
+        tabHost.addTab(tabHost.newTabSpec("thread").setIndicator("Threads").setContent { thread })
+        tabHost.addTab(tabHost.newTabSpec("settings").setIndicator("Settings").setContent { settings })
 
         return tabHost
     }
 
     /* ══════════════════════════════════════════════════════════════
-     *  TAB 1: 监控 (Dashboard)
+     *  TAB 1: Monitor (Dashboard)
      * ══════════════════════════════════════════════════════════════ */
 
     private fun buildDashboardTab(): View {
@@ -272,16 +272,16 @@ class MainActivity : AppCompatActivity() {
 
         // Status card
         col.addView(makeCard {
-            addView(makeLabel("模块状态"))
-            tvStatus = makeValue("未知"); addView(tvStatus)
-            tvVersion = makeValue("版本: —"); addView(tvVersion)
-            tvUid = makeValue("目标 UID: —"); addView(tvUid)
-            tvEventCount = makeValue("事件数: 0"); addView(tvEventCount)
-            tvMonState = makeValue("状态: 未启动").apply {
+            addView(makeLabel("Module Status"))
+            tvStatus = makeValue("Unknown"); addView(tvStatus)
+            tvVersion = makeValue("Version: —"); addView(tvVersion)
+            tvUid = makeValue("Target UID: —"); addView(tvUid)
+            tvEventCount = makeValue("Event count: 0"); addView(tvEventCount)
+            tvMonState = makeValue("Status: Not started").apply {
                 setTextColor(cSecondary)
             }; addView(tvMonState)
 
-            tvMsg = makeValue("提示: -").apply {
+            tvMsg = makeValue("Tip: -").apply {
                 setTextColor(cSecondary)
                 maxLines = 2
                 ellipsize = TextUtils.TruncateAt.END
@@ -290,9 +290,9 @@ class MainActivity : AppCompatActivity() {
 
         // Step 1: Select app
         col.addView(makeCard {
-            addView(makeLabel("步骤 1: 选择目标应用"))
+            addView(makeLabel("Step 1: Select target app"))
             etAppSearch = EditText(this@MainActivity).apply {
-                hint = "搜索应用名 / 包名"
+                hint = "Search app name / package"
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -318,9 +318,9 @@ class MainActivity : AppCompatActivity() {
 
         // Step 2: Show selected NRs (managed in Filter tab)
         col.addView(makeCard {
-            addView(makeLabel("步骤 2: 已选系统调用（在「过滤」页管理）"))
-            tvDashNrCount = makeValue("已选: 0 个系统调用"); addView(tvDashNrCount)
-            tvDashNrList = makeValue("NR列表: (空)").apply {
+            addView(makeLabel("Step 2: Selected syscalls (manage in Filter tab)"))
+            tvDashNrCount = makeValue("Selected: 0 syscalls"); addView(tvDashNrCount)
+            tvDashNrList = makeValue("NR list: (empty)").apply {
                 maxLines = 6
                 ellipsize = TextUtils.TruncateAt.END
             }; addView(tvDashNrList)
@@ -328,9 +328,9 @@ class MainActivity : AppCompatActivity() {
 
         // Step 3: Start/Stop button
         col.addView(makeCard {
-            addView(makeLabel("步骤 3: 启动监控"))
+            addView(makeLabel("Step 3: Start monitoring"))
             btnStartStop = Button(this@MainActivity).apply {
-                text = "一键启用监控"
+                text = "One-tap start monitoring"
                 setBackgroundColor(cGreen)
                 setTextColor(Color.WHITE)
                 setOnClickListener { onStartStopClick() }
@@ -347,7 +347,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* ══════════════════════════════════════════════════════════════
-     *  TAB 2: 过滤 (Filter)
+     *  TAB 2: Filter (Filter)
      * ══════════════════════════════════════════════════════════════ */
 
     private fun buildFilterTab(): View {
@@ -365,9 +365,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         col.addView(makeCard {
-            addView(makeLabel("额外 Hook"))
+            addView(makeLabel("Extra Hooks"))
             switchDoFilpOpen = Switch(this@MainActivity).apply {
-                text = "开启 do_filp_open（更底层 open 路径）"
+                text = "Enable do_filp_open (lower-level open path)"
                 isChecked = prefs.getBoolean("do_filp_open", false)
                 setOnCheckedChangeListener { _, checked ->
                     prefs.edit().putBoolean("do_filp_open", checked).apply()
@@ -382,9 +382,9 @@ class MainActivity : AppCompatActivity() {
         })
 
         col.addView(makeCard {
-            addView(makeLabel("当前 NR 过滤器"))
-            tvNrCount = makeValue("已选: 0 个系统调用"); addView(tvNrCount)
-            tvNrList = makeValue("NR列表: (空)").apply {
+            addView(makeLabel("Current NR filter"))
+            tvNrCount = makeValue("Selected: 0 syscalls"); addView(tvNrCount)
+            tvNrList = makeValue("NR list: (empty)").apply {
                 maxLines = 10
                 ellipsize = TextUtils.TruncateAt.END
             }; addView(tvNrList)
@@ -397,7 +397,7 @@ class MainActivity : AppCompatActivity() {
             }
             addView(llSelectedNrs)
             addView(Button(this@MainActivity).apply {
-                text = "清空已选 NR"
+                text = "Clear selected NRs"
                 setTextColor(cRed)
                 isAllCaps = false
                 setOnClickListener { vm.disableAll() }
@@ -410,7 +410,7 @@ class MainActivity : AppCompatActivity() {
 
         // Preset quick-apply
         col.addView(makeCard {
-            addView(makeLabel("快速应用预设"))
+            addView(makeLabel("Quick apply preset"))
             StatusParser.presets.forEach { preset ->
                 addView(Button(this@MainActivity).apply {
                     text = "${preset.name}: ${preset.description}"
@@ -418,7 +418,7 @@ class MainActivity : AppCompatActivity() {
                     isAllCaps = false
                     setOnClickListener {
                         applyPresetUi(preset.id)
-                        tvMsg.text = "提示: 已应用预设 ${preset.name}"
+                        tvMsg.text = "Tip: Preset applied ${preset.name}"
                     }
                     layoutParams = LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -429,7 +429,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         col.addView(makeCard {
-            addView(makeLabel("规则集 (Rule Sets)"))
+            addView(makeLabel("Rule Sets"))
 
             fun addRuleBtn(title: String, nrs: IntArray) {
                 addView(Button(this@MainActivity).apply {
@@ -438,7 +438,7 @@ class MainActivity : AppCompatActivity() {
                     isAllCaps = false
                     setOnClickListener {
                         vm.setNrs(nrs.toList())
-                        tvMsg.text = "提示: 已应用规则集 $title"
+                        tvMsg.text = "Tip: Rule set applied $title"
                     }
                     layoutParams = LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -447,27 +447,27 @@ class MainActivity : AppCompatActivity() {
                 })
             }
 
-            addRuleBtn("抓取文件读写", RuleSets.FILE_IO)
-            addRuleBtn("抓取网络请求", RuleSets.NETWORK)
-            addRuleBtn("反调试检测", RuleSets.ANTI_DEBUG)
-            addRuleBtn("进程生命周期", RuleSets.PROCESS)
-            addRuleBtn("内存操作/注入", RuleSets.MEMORY)
+            addRuleBtn("Capture file I/O", RuleSets.FILE_IO)
+            addRuleBtn("Capture network requests", RuleSets.NETWORK)
+            addRuleBtn("Anti-debug detection", RuleSets.ANTI_DEBUG)
+            addRuleBtn("Process lifecycle", RuleSets.PROCESS)
+            addRuleBtn("Memory ops/injection", RuleSets.MEMORY)
         })
 
         col.addView(makeCard {
-            addView(makeLabel("PC 联动转发"))
+            addView(makeLabel("PC relay forwarding"))
 
             val hostRow = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
             }
             val etHost = EditText(this@MainActivity).apply {
-                hint = "PC IP/域名 (如 192.168.1.10)"
+                hint = "PC IP/domain (e.g. 192.168.1.10)"
                 setText(relayHost)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             val etPort = EditText(this@MainActivity).apply {
-                hint = "端口"
+                hint = "Port"
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER
                 setText(relayPort.toString())
                 layoutParams = LinearLayout.LayoutParams(dp(96), ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -477,7 +477,7 @@ class MainActivity : AppCompatActivity() {
             hostRow.addView(etPort)
             addView(hostRow)
 
-            val tvState = makeValue(if (relayEnabled) "状态: 已开启" else "状态: 未开启").apply {
+            val tvState = makeValue(if (relayEnabled) "Status: Enabled" else "Status: Disabled").apply {
                 setTextColor(if (relayEnabled) cGreen else cSecondary)
             }
             addView(tvState)
@@ -491,21 +491,21 @@ class MainActivity : AppCompatActivity() {
                 ).apply { topMargin = dp(8) }
             }
             val etServerPort = EditText(this@MainActivity).apply {
-                hint = "App 端口(默认8080)"
+                hint = "App port (default 8080)"
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER
                 setText(pcServerPort.toString())
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
             serverRow.addView(etServerPort)
             serverRow.addView(Space(this@MainActivity).apply { layoutParams = LinearLayout.LayoutParams(dp(8), 1) })
-            val tvServerState = makeValue(if (pcServerEnabled) "ADB模式: 已开启" else "ADB模式: 未开启").apply {
+            val tvServerState = makeValue(if (pcServerEnabled) "ADB mode: Enabled" else "ADB mode: Disabled").apply {
                 setTextColor(if (pcServerEnabled) cGreen else cSecondary)
             }
             serverRow.addView(tvServerState)
             addView(serverRow)
 
             addView(Switch(this@MainActivity).apply {
-                text = "开启 App 服务端 (PC 用 adb forward 连接)"
+                text = "Enable app server (PC connects via adb forward)"
                 isChecked = pcServerEnabled
                 setOnCheckedChangeListener { _, checked ->
                     pcServerPort = etServerPort.text.toString().toIntOrNull() ?: 8080
@@ -515,11 +515,11 @@ class MainActivity : AppCompatActivity() {
                         .apply()
                     pcServerEnabled = checked
                     if (checked) {
-                        tvServerState.text = "ADB模式: 已开启"
+                        tvServerState.text = "ADB mode: Enabled"
                         tvServerState.setTextColor(cGreen)
                         startPcServer()
                     } else {
-                        tvServerState.text = "ADB模式: 未开启"
+                        tvServerState.text = "ADB mode: Disabled"
                         tvServerState.setTextColor(cSecondary)
                         stopPcServer()
                     }
@@ -527,12 +527,12 @@ class MainActivity : AppCompatActivity() {
             })
 
             addView(Button(this@MainActivity).apply {
-                text = "显示 ADB 命令"
+                text = "Show ADB command"
                 isAllCaps = false
                 setOnClickListener {
                     pcServerPort = etServerPort.text.toString().toIntOrNull() ?: 8080
                     prefs.edit().putInt("pc_server_port", pcServerPort).apply()
-                    tvMsg.text = "提示: PC 执行 adb forward tcp:$pcServerPort tcp:$pcServerPort，然后 PC Viewer 作为客户端连接 127.0.0.1:$pcServerPort"
+                    tvMsg.text = "Tip: Run `adb forward tcp:$pcServerPort tcp:$pcServerPort` on PC, then let PC Viewer connect to 127.0.0.1:$pcServerPort"
                 }
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -541,7 +541,7 @@ class MainActivity : AppCompatActivity() {
             })
 
             val sw = Switch(this@MainActivity).apply {
-                text = "开启 PC 联动 (HTTP 推送到 /api/ingest)"
+                text = "Enable PC relay (HTTP push to /api/ingest)"
                 isChecked = relayEnabled
                 setOnCheckedChangeListener { _, checked ->
                     relayHost = etHost.text.toString().trim().ifBlank { "127.0.0.1" }
@@ -553,11 +553,11 @@ class MainActivity : AppCompatActivity() {
                         .apply()
                     relayEnabled = checked
                     if (checked) {
-                        tvState.text = "状态: 已开启"
+                        tvState.text = "Status: Enabled"
                         tvState.setTextColor(cGreen)
                         startRelay()
                     } else {
-                        tvState.text = "状态: 未开启"
+                        tvState.text = "Status: Disabled"
                         tvState.setTextColor(cSecondary)
                         stopRelay()
                     }
@@ -566,7 +566,7 @@ class MainActivity : AppCompatActivity() {
             addView(sw)
 
             addView(Button(this@MainActivity).apply {
-                text = "测试连接"
+                text = "Test connection"
                 isAllCaps = false
                 setOnClickListener {
                     relayHost = etHost.text.toString().trim().ifBlank { "127.0.0.1" }
@@ -575,13 +575,13 @@ class MainActivity : AppCompatActivity() {
                     lifecycleScope.launch {
                         val ok = withContext(Dispatchers.IO) { testRelayOnce() }
                         if (ok) {
-                            tvMsg.text = "提示: PC 联动接口可用"
+                            tvMsg.text = "Tip: PC relay endpoint is reachable"
                         } else {
                             val h = relayHost.trim().lowercase()
                             tvMsg.text = if (h == "127.0.0.1" || h == "localhost") {
-                                "提示: PC 联动接口不可用（${relayLastError.ifBlank { "连接失败" }}；若已 adb reverse，请确认 PC Viewer 监听 $relayPort）"
+                                "Tip: PC relay endpoint unavailable (${relayLastError.ifBlank { "Connection failed" }}; if adb reverse is set, confirm PC Viewer listens on $relayPort)"
                             } else {
-                                "提示: PC 联动接口不可用（${relayLastError.ifBlank { "连接失败" }}）"
+                                "Tip: PC relay endpoint unavailable (${relayLastError.ifBlank { "Connection failed" }}）"
                             }
                         }
                     }
@@ -595,9 +595,9 @@ class MainActivity : AppCompatActivity() {
 
         // Manual NR add/remove
         col.addView(makeCard {
-            addView(makeLabel("手动管理 NR"))
+            addView(makeLabel("Manual NR management"))
             val etNr = EditText(this@MainActivity).apply {
-                hint = "输入 NR 编号 (如 56)"
+                hint = "Enter NR number (e.g. 56)"
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER
             }
             addView(etNr)
@@ -606,12 +606,12 @@ class MainActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
             }
             row.addView(Button(this@MainActivity).apply {
-                text = "添加"
+                text = "Add"
                 setOnClickListener {
                     val nr = etNr.text.toString().toIntOrNull()
                     if (nr != null) {
                         if (hookedNrSet.isNotEmpty() && !hookedNrSet.contains(nr)) {
-                            tvMsg.text = "提示: NR 未被 hook，可能不会有事件"
+                            tvMsg.text = "Tip: NR not hooked yet; events may not appear"
                         }
                         vm.addNr(nr)
                         etNr.text.clear()
@@ -620,7 +620,7 @@ class MainActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
             row.addView(Button(this@MainActivity).apply {
-                text = "移除"
+                text = "Remove"
                 setOnClickListener {
                     val nr = etNr.text.toString().toIntOrNull()
                     if (nr != null) {
@@ -634,7 +634,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         col.addView(makeCard {
-            addView(makeLabel("按分类选择系统调用"))
+            addView(makeLabel("Select syscalls by category"))
             filterListContainer = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
             }
@@ -642,10 +642,10 @@ class MainActivity : AppCompatActivity() {
         })
 
         col.addView(makeCard {
-            addView(makeLabel("全部 ARM64 SVC 号 (0-459)"))
+            addView(makeLabel("All ARM64 SVC numbers (0-459)"))
 
             etAllNrFilter = EditText(this@MainActivity).apply {
-                hint = "筛选：nr / name（支持子串）"
+                hint = "Filter: nr / name (substring supported)"
                 setTextColor(cText)
                 setHintTextColor(cSecondary)
             }
@@ -715,13 +715,13 @@ class MainActivity : AppCompatActivity() {
         }
         if (shown == 0) {
             llAllNrList.addView(TextView(this).apply {
-                text = "无匹配项"
+                text = "No matches"
                 setTextColor(cSecondary)
                 setPadding(0, dp(4), 0, dp(4))
             })
         } else if (shown >= 200) {
             llAllNrList.addView(TextView(this).apply {
-                text = "仅显示前 200 项，继续输入筛选缩小范围"
+                text = "Showing first 200 items only; keep typing to narrow down"
                 setTextColor(cSecondary)
                 setPadding(0, dp(6), 0, 0)
             })
@@ -729,7 +729,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* ══════════════════════════════════════════════════════════════
-     *  TAB 3: 事件 (Events)
+     *  TAB 3: Events (Events)
      * ══════════════════════════════════════════════════════════════ */
 
     private fun buildEventsTab(): View {
@@ -751,7 +751,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         tvEvtCount = TextView(this).apply {
-            text = "事件: 0"
+            text = "Events: 0"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTextColor(cText)
             typeface = Typeface.DEFAULT_BOLD
@@ -782,7 +782,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         topBar.addView(Button(this).apply {
-            text = "清空"
+            text = "Clear"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setTextColor(cRed)
             isAllCaps = false
@@ -803,7 +803,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         etEventSearch = EditText(this).apply {
-            hint = "搜索事件（字符串/数字）"
+            hint = "Search events (text/number)"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             addTextChangedListener(object : TextWatcher {
@@ -838,7 +838,7 @@ class MainActivity : AppCompatActivity() {
         searchBar.addView(etTid)
 
         searchBar.addView(Button(this).apply {
-            text = "清除"
+            text = "Reset"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             isAllCaps = false
             setOnClickListener {
@@ -852,7 +852,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         searchBar.addView(Button(this).apply {
-            text = "历史"
+            text = "History"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             isAllCaps = false
             setOnClickListener { shareHistory() }
@@ -863,7 +863,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         searchBar.addView(Button(this).apply {
-            text = "清历史"
+            text = "Clear history"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setTextColor(cRed)
             isAllCaps = false
@@ -907,7 +907,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         col.addView(makeCard {
-            addView(makeLabel("线程分析器"))
+            addView(makeLabel("Thread analyzer"))
 
             val row = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -915,7 +915,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             val etTgid = EditText(this@MainActivity).apply {
-                hint = "TGID (进程号)"
+                hint = "TGID (process id)"
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
@@ -925,7 +925,7 @@ class MainActivity : AppCompatActivity() {
             row.addView(Space(this@MainActivity).apply { layoutParams = LinearLayout.LayoutParams(dp(8), 1) })
 
             row.addView(Button(this@MainActivity).apply {
-                text = "使用最近"
+                text = "Use recent"
                 isAllCaps = false
                 setOnClickListener {
                     val t = lastEventsAll.lastOrNull()?.tgid ?: 0
@@ -939,16 +939,16 @@ class MainActivity : AppCompatActivity() {
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 typeface = Typeface.MONOSPACE
                 setTextColor(cPrimary)
-                text = "请输入 TGID 并点击刷新。"
+                text = "Enter TGID and click Refresh."
             }
 
             row.addView(Button(this@MainActivity).apply {
-                text = "刷新"
+                text = "Refresh"
                 isAllCaps = false
                 setOnClickListener {
                     val tgid = etTgid.text.toString().trim().toIntOrNull() ?: 0
                     if (tgid <= 0) {
-                        tvMsg.text = "提示: TGID 无效"
+                        tvMsg.text = "Tip: Invalid TGID"
                         return@setOnClickListener
                     }
                     lifecycleScope.launch {
@@ -959,14 +959,14 @@ class MainActivity : AppCompatActivity() {
                         tvOut.text = buildString {
                             appendLine("TGID=$tgid")
                             appendLine()
-                            appendLine("线程统计(Top):")
+                            appendLine("Thread stats (Top):")
                             if (stats.isEmpty()) {
-                                appendLine("  (空)")
+                                appendLine("  (empty)")
                             } else {
                                 stats.forEach { appendLine("  tid=${it.pid}  cnt=${it.count}") }
                             }
                             appendLine()
-                            appendLine("线程树(基于 clone/clone3 ret):")
+                            appendLine("Thread tree (based on clone/clone3 ret):")
                             appendLine(buildThreadTree(edges))
                         }
                     }
@@ -983,7 +983,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildThreadTree(edges: List<ThreadEdge>): String {
-        if (edges.isEmpty()) return "(空)"
+        if (edges.isEmpty()) return "(empty)"
         val children = HashMap<Int, MutableList<Int>>()
         val hasParent = HashSet<Int>()
         val allParents = HashSet<Int>()
@@ -1006,7 +1006,7 @@ class MainActivity : AppCompatActivity() {
             for (c in cs) dfs(c, "$indent  ")
         }
         if (roots.isEmpty()) {
-            val k = children.keys.toList().sorted().firstOrNull() ?: return "(空)"
+            val k = children.keys.toList().sorted().firstOrNull() ?: return "(empty)"
             dfs(k, "")
         } else {
             for (r in roots) dfs(r, "")
@@ -1015,7 +1015,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* ══════════════════════════════════════════════════════════════
-     *  TAB 4: 设置 (Settings)
+     *  TAB 4: Settings (Settings)
      * ══════════════════════════════════════════════════════════════ */
 
     private fun buildSettingsTab(): View {
@@ -1037,19 +1037,19 @@ class MainActivity : AppCompatActivity() {
             addView(makeLabel("SuperKey"))
             tvSuperKey = EditText(this@MainActivity).apply {
                 setText(KpmBridge.getSuperKey())
-                hint = "输入 SuperKey"
+                hint = "Enter SuperKey"
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 inputType = android.text.InputType.TYPE_CLASS_TEXT or
                         android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             }
             addView(tvSuperKey)
             addView(Button(this@MainActivity).apply {
-                text = "保存 SuperKey"
+                text = "Save SuperKey"
                 setOnClickListener {
                     val key = tvSuperKey.text.toString().trim()
                     if (key.isNotEmpty()) {
                         KpmBridge.setSuperKey(key)
-                        tvMsg.text = "提示: SuperKey 已更新"
+                        tvMsg.text = "Tip: SuperKey updated"
                     }
                 }
             })
@@ -1057,16 +1057,16 @@ class MainActivity : AppCompatActivity() {
 
         // Tier2 toggle
         col.addView(makeCard {
-            addView(makeLabel("Tier-2 扩展 Hook"))
+            addView(makeLabel("Tier-2 extended hooks"))
             addView(TextView(this@MainActivity).apply {
-                text = "启用后额外 Hook 24 个系统调用\n包括: mkdirat, unlinkat, renameat, statfs, faccessat, " +
+                text = "Enabling adds 24 extra syscall hooks\nincluding: mkdirat, unlinkat, renameat, statfs, faccessat, " +
                         "getsockname, getsockopt, shutdown, sendmsg, recvmsg, accept4, ppoll, " +
-                        "eventfd2, timerfd, signalfd4, seccomp, bpf, getrandom, prlimit64 等"
+                        "eventfd2, timerfd, signalfd4, seccomp, bpf, getrandom, prlimit64, etc."
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 setTextColor(cSecondary)
             })
             switchTier2 = Switch(this@MainActivity).apply {
-                text = "启用 Tier-2"
+                text = "Enable Tier-2"
                 setOnCheckedChangeListener { _, checked ->
                     vm.tier2(checked)
                 }
@@ -1079,14 +1079,14 @@ class MainActivity : AppCompatActivity() {
         })
 
         col.addView(makeCard {
-            addView(makeLabel("回溯模式"))
+            addView(makeLabel("Backtrace mode"))
             addView(TextView(this@MainActivity).apply {
-                text = "准确率优先：只走 FP 链，少量栈扫描补帧\n长度优先：更积极栈扫描，回溯更长但可能有误报"
+                text = "Accuracy-first: FP chain only with light stack scan\nLength-first: more aggressive stack scan for longer traces with possible false positives"
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                 setTextColor(cSecondary)
             })
             val sw = Switch(this@MainActivity).apply {
-                text = "长度优先"
+                text = "Length-first"
                 isChecked = prefs.getBoolean("bt_length_first", false)
                 setOnCheckedChangeListener { _, checked ->
                     prefs.edit().putBoolean("bt_length_first", checked).apply()
@@ -1102,9 +1102,9 @@ class MainActivity : AppCompatActivity() {
         })
 
         col.addView(makeCard {
-            addView(makeLabel("应用列表"))
+            addView(makeLabel("App list"))
             switchHideSystemApps = Switch(this@MainActivity).apply {
-                text = "隐藏系统应用"
+                text = "Hide system apps"
                 isChecked = hideSystemApps
                 setOnCheckedChangeListener { _, checked ->
                     hideSystemApps = checked
@@ -1119,7 +1119,7 @@ class MainActivity : AppCompatActivity() {
             addView(switchHideSystemApps)
 
             switchOnlyLaunchableApps = Switch(this@MainActivity).apply {
-                text = "仅显示可启动应用"
+                text = "Show launchable apps only"
                 isChecked = onlyLaunchableApps
                 setOnCheckedChangeListener { _, checked ->
                     onlyLaunchableApps = checked
@@ -1136,11 +1136,11 @@ class MainActivity : AppCompatActivity() {
 
         // About
         col.addView(makeCard {
-            addView(makeLabel("关于"))
+            addView(makeLabel("About"))
             addView(makeValue("SVCMonitor v8.1.0"))
-            addView(makeValue("ARM64 SVC 系统调用监控工具"))
-            addView(makeValue("支持 50+ 系统调用深度参数解析"))
-            addView(makeValue("目标: Pixel 6 / Android 12 / APatch"))
+            addView(makeValue("ARM64 SVC syscall monitoring tool"))
+            addView(makeValue("Supports deep argument parsing for 50+ syscalls"))
+            addView(makeValue("Target: Pixel 6 / Android 12 / APatch"))
         })
 
         sv.addView(col)
@@ -1163,7 +1163,7 @@ class MainActivity : AppCompatActivity() {
     private fun refreshAppSpinner() {
         val prevUid = vm.selectedApp?.uid
         appList = loadVisibleApps(appSearchQuery)
-        val names = listOf("— 请选择 —") + appList.map { "${it.label} (${it.packageName})" }
+        val names = listOf("— Please select —") + appList.map { "${it.label} (${it.packageName})" }
         val adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, names)
         spinnerApp.adapter = adapter
 
@@ -1185,14 +1185,14 @@ class MainActivity : AppCompatActivity() {
         // Status updates
         vm.status.observe(this) { s ->
             if (s != null) {
-                tvVersion.text = "版本: ${s.version}"
-                tvUid.text = "目标 UID: ${if (s.targetUid >= 0) s.targetUid.toString() else "全部"}"
-                tvStatus.text = if (s.enabled) "已启用" else "已禁用"
+                tvVersion.text = "Version: ${s.version}"
+                tvUid.text = "Target UID: ${if (s.targetUid >= 0) s.targetUid.toString() else "All"}"
+                tvStatus.text = if (s.enabled) "Enabled" else "Disabled"
                 tvStatus.setTextColor(if (s.enabled) cGreen else cRed)
-                tvNrCount.text = "已选: ${s.nrCount} 个系统调用"
-                tvNrList.text = "NR列表: ${s.nrList.joinToString(", ") { "${StatusParser.nrToName(it)}($it)" }}"
-                tvDashNrCount.text = "已选: ${s.nrCount} 个系统调用"
-                tvDashNrList.text = "NR列表: ${s.nrList.joinToString(", ") { "${StatusParser.nrToName(it)}($it)" }}"
+                tvNrCount.text = "Selected: ${s.nrCount} syscalls"
+                tvNrList.text = "NR list: ${s.nrList.joinToString(", ") { "${StatusParser.nrToName(it)}($it)" }}"
+                tvDashNrCount.text = "Selected: ${s.nrCount} syscalls"
+                tvDashNrList.text = "NR list: ${s.nrList.joinToString(", ") { "${StatusParser.nrToName(it)}($it)" }}"
                 currentNrList = s.nrList
                 renderSelectedNrs(s.nrList)
                 switchTier2.isChecked = s.tier2
@@ -1205,22 +1205,22 @@ class MainActivity : AppCompatActivity() {
         // Monitoring state
         vm.monitoring.observe(this) { mon ->
             if (mon) {
-                tvMonState.text = "状态: 监控中"
+                tvMonState.text = "Status: Monitoring"
                 tvMonState.setTextColor(cGreen)
-                btnStartStop.text = "停止监控"
+                btnStartStop.text = "Stop monitoring"
                 btnStartStop.setBackgroundColor(cRed)
             } else {
-                tvMonState.text = "状态: 未启动"
+                tvMonState.text = "Status: Not started"
                 tvMonState.setTextColor(cSecondary)
-                btnStartStop.text = "一键启用监控"
+                btnStartStop.text = "One-tap start monitoring"
                 btnStartStop.setBackgroundColor(cGreen)
             }
         }
 
         // Event count
         vm.eventCount.observe(this) { count ->
-            tvEventCount.text = "事件数: $count"
-            tvEvtCount.text = "事件: $count"
+            tvEventCount.text = "Event count: $count"
+            tvEvtCount.text = "Events: $count"
         }
 
         // Events list
@@ -1241,7 +1241,7 @@ class MainActivity : AppCompatActivity() {
         // Toast
         vm.toast.observe(this) { msg ->
             if (msg != null) {
-                tvMsg.text = "提示: $msg"
+                tvMsg.text = "Tip: $msg"
                 vm.toastConsumed()
             }
         }
@@ -1258,7 +1258,7 @@ class MainActivity : AppCompatActivity() {
         val display = events.takeLast(limit).asReversed()
         if (display.isEmpty()) {
             llEventList.addView(TextView(this).apply {
-                text = "暂无事件。启动监控后事件将自动显示。"
+                text = "No events yet. Events will appear automatically after monitoring starts."
                 setTextColor(cSecondary)
                 setPadding(dp(8), dp(16), dp(8), dp(16))
                 gravity = Gravity.CENTER
@@ -1422,7 +1422,7 @@ class MainActivity : AppCompatActivity() {
         if (pid <= 0) return
         val events = lastEventsAll.filter { it.tgid == pid }
         if (events.isEmpty()) {
-            tvMsg.text = "提示: PID=$pid 暂无事件"
+            tvMsg.text = "Tip: No events for PID=$pid"
             return
         }
 
@@ -1440,7 +1440,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         root.addView(TextView(this).apply {
-            text = "进程分析 (PID=$pid)"
+            text = "Process analysis (PID=$pid)"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setTextColor(cPrimary)
             typeface = Typeface.DEFAULT_BOLD
@@ -1460,7 +1460,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         root.addView(Button(this).apply {
-            text = "关闭"
+            text = "Close"
             isAllCaps = false
             setOnClickListener { dialog.dismiss() }
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
@@ -1488,15 +1488,15 @@ class MainActivity : AppCompatActivity() {
                 val ordered = events.sortedBy { it.seq }
 
                 buildString {
-                    appendLine("事件数: ${events.size}")
+                    appendLine("Event count: ${events.size}")
                     appendLine("UID: ${uidSet.joinToString(", ")}")
-                    appendLine("进程名: ${commSet.joinToString(", ")}")
-                    appendLine("Seq范围: $firstSeq ~ $lastSeq")
+                    appendLine("Process name: ${commSet.joinToString(", ")}")
+                    appendLine("Seq range: $firstSeq ~ $lastSeq")
                     appendLine()
-                    appendLine("Top 系统调用:")
+                    appendLine("Top syscalls:")
                     top.forEach { appendLine("  ${it.key}: ${it.value}") }
                     appendLine()
-                    appendLine("调用流程(按Seq):")
+                    appendLine("Call flow (by Seq):")
                     for (e in ordered) {
                         val d = e.desc.replace('\n', ' ').replace('\r', ' ').trim()
                         appendLine("#${e.seq}  ${e.name}(${e.nr})  $d")
@@ -1831,7 +1831,7 @@ class MainActivity : AppCompatActivity() {
             if (code !in 200..299) relayLastError = "HTTP $code (/api/ingest)"
             code in 200..299
         } catch (_: Exception) {
-            relayLastError = "网络连接失败 (/api/ingest)"
+            relayLastError = "Network connection failed (/api/ingest)"
             false
         } finally {
             try {
@@ -1844,11 +1844,11 @@ class MainActivity : AppCompatActivity() {
     private fun getRelayStats(): Boolean {
         val host = relayHost.trim().removePrefix("http://").removePrefix("https://")
         if (host.isBlank()) {
-            relayLastError = "Host 为空"
+            relayLastError = "Host is empty"
             return false
         }
         if (relayPort <= 0 || relayPort > 65535) {
-            relayLastError = "端口非法"
+            relayLastError = "Invalid port"
             return false
         }
         var conn: HttpURLConnection? = null
@@ -1863,7 +1863,7 @@ class MainActivity : AppCompatActivity() {
             if (code !in 200..299) relayLastError = "HTTP $code (/api/stats)"
             code in 200..299
         } catch (_: Exception) {
-            relayLastError = "网络连接失败 (/api/stats)"
+            relayLastError = "Network connection failed (/api/stats)"
             false
         } finally {
             try { conn?.disconnect() } catch (_: Exception) {}
@@ -1944,9 +1944,9 @@ class MainActivity : AppCompatActivity() {
 
                         val blob = buildString {
                             appendLine("#${e.seq}  ${e.name}(${e.nr})")
-                            appendLine("分类: ${StatusParser.syscallCategory(e.nr)}")
+                            appendLine("Category: ${StatusParser.syscallCategory(e.nr)}")
                             appendLine("TGID: ${e.tgid}  PID: ${e.pid}  UID: ${e.uid}")
-                            appendLine("进程名: ${e.comm}")
+                            appendLine("Process: ${e.comm}")
                             appendLine()
                             appendLine("pc: $pcResolved")
                             appendLine("caller: $callerResolved")
@@ -1959,7 +1959,7 @@ class MainActivity : AppCompatActivity() {
                             if (fdResolved.isNotEmpty()) appendLine("fd(${e.a0}): $fdResolved")
                             if (chainResolved.isNotBlank()) {
                                 appendLine()
-                                appendLine("调用链:")
+                                appendLine("Call chain:")
                                 appendLine(chainResolved)
                             }
                             if (e.bt.isNotEmpty()) {
@@ -2075,7 +2075,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val src = historyFile()
             if (!src.exists() || src.length() == 0L) {
-                tvMsg.text = "提示: 暂无历史日志"
+                tvMsg.text = "Tip: No history logs"
                 return@launch
             }
             val dst = withContext(Dispatchers.IO) {
@@ -2095,7 +2095,7 @@ class MainActivity : AppCompatActivity() {
             }
             historyLastSeq = 0L
             prefs.edit().putLong("history_last_seq", 0L).apply()
-            tvMsg.text = "提示: 历史日志已清空"
+            tvMsg.text = "Tip: History logs cleared"
         }
     }
 
@@ -2132,12 +2132,12 @@ class MainActivity : AppCompatActivity() {
             }
 
             val detail = buildString {
-                appendLine("═══ 系统调用详情 ═══")
+                appendLine("═══ Syscall Details ═══")
                 appendLine()
                 appendLine("#${evt.seq}  ${evt.name}(${evt.nr})")
-                appendLine("分类: ${StatusParser.syscallCategory(evt.nr)}")
+                appendLine("Category: ${StatusParser.syscallCategory(evt.nr)}")
                 appendLine("TGID: ${evt.tgid}  PID: ${evt.pid}  UID: ${evt.uid}")
-                appendLine("进程名: ${evt.comm}")
+                appendLine("Process: ${evt.comm}")
                 appendLine()
                 appendLine("pc: $pcResolved")
                 appendLine("caller: $callerResolved")
@@ -2148,7 +2148,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (kernelBtResolved.isNotBlank()) {
                     appendLine()
-                    appendLine("═══ 内核回溯(bt) ═══")
+                    appendLine("═══ Kernel Backtrace (bt) ═══")
                     appendLine(kernelBtResolved)
                 }
                 if (fdResolved.isNotEmpty()) {
@@ -2156,11 +2156,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (chainResolved.isNotBlank()) {
                     appendLine()
-                    appendLine("═══ 调用链(FP) ═══")
+                    appendLine("═══ Call Chain (FP) ═══")
                     appendLine(chainResolved)
                 }
                 appendLine()
-                appendLine("═══ 参数 ═══")
+                appendLine("═══ Arguments ═══")
                 appendLine("a0: 0x${java.lang.Long.toHexString(evt.a0)} (${evt.a0})")
                 appendLine("a1: 0x${java.lang.Long.toHexString(evt.a1)} (${evt.a1})")
                 appendLine("a2: 0x${java.lang.Long.toHexString(evt.a2)} (${evt.a2})")
@@ -2168,13 +2168,13 @@ class MainActivity : AppCompatActivity() {
                 appendLine("a4: 0x${java.lang.Long.toHexString(evt.a4)} (${evt.a4})")
                 appendLine("a5: 0x${java.lang.Long.toHexString(evt.a5)} (${evt.a5})")
                 appendLine()
-                appendLine("═══ 解析结果 ═══")
+                appendLine("═══ Parsed Result ═══")
                 appendLine(evt.desc)
 
                 val addrs = extractHexAddrs(evt.desc).take(8)
                 if (addrs.isNotEmpty()) {
                     appendLine()
-                    appendLine("═══ desc 地址解析 ═══")
+                    appendLine("═══ desc Address Resolution ═══")
                     addrs.forEach { a ->
                         val abs = "0x${java.lang.Long.toHexString(a)}"
                         val so = resolveAddress(evt.tgid, a)
@@ -2186,12 +2186,12 @@ class MainActivity : AppCompatActivity() {
             AlertDialog.Builder(this@MainActivity)
                 .setTitle("${evt.name}(${evt.nr})")
                 .setMessage(detail)
-                .setPositiveButton("确定", null)
-                .setNegativeButton("PID分析") { _, _ -> showPidSidebar(evt.tgid) }
-                .setNeutralButton("复制") { _, _ ->
+                .setPositiveButton("OK", null)
+                .setNegativeButton("PID Analysis") { _, _ -> showPidSidebar(evt.tgid) }
+                .setNeutralButton("Copy") { _, _ ->
                     val clip = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                     clip.setPrimaryClip(android.content.ClipData.newPlainText("svc_event", detail))
-                    tvMsg.text = "提示: 已复制到剪贴板"
+                    tvMsg.text = "Tip: Copied to clipboard"
                 }
                 .show()
         }
@@ -2200,30 +2200,30 @@ class MainActivity : AppCompatActivity() {
     private fun exportCsv() {
         val events = vm.events.value ?: emptyList()
         if (events.isEmpty()) {
-            tvMsg.text = "提示: 没有事件可导出"
+            tvMsg.text = "Tip: No events to export"
             return
         }
         try {
             val file = logExporter.exportCsv(events)
             shareFile(file, "text/csv")
-            tvMsg.text = "提示: 已导出 CSV"
+            tvMsg.text = "Tip: CSV exported"
         } catch (e: Exception) {
-            tvMsg.text = "提示: 导出失败: ${e.message}"
+            tvMsg.text = "Tip: Export failed: ${e.message}"
         }
     }
 
     private fun exportJson() {
         val events = vm.events.value ?: emptyList()
         if (events.isEmpty()) {
-            tvMsg.text = "提示: 没有事件可导出"
+            tvMsg.text = "Tip: No events to export"
             return
         }
         try {
             val file = logExporter.exportJson(events)
             shareFile(file, "application/json")
-            tvMsg.text = "提示: 已导出 JSON"
+            tvMsg.text = "Tip: JSON exported"
         } catch (e: Exception) {
-            tvMsg.text = "提示: 导出失败: ${e.message}"
+            tvMsg.text = "Tip: Export failed: ${e.message}"
         }
     }
 
@@ -2234,7 +2234,7 @@ class MainActivity : AppCompatActivity() {
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(Intent.createChooser(intent, "分享"))
+        startActivity(Intent.createChooser(intent, "Share"))
     }
 
     /* ══════════════════════════════════════════════════════════════
@@ -2247,7 +2247,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             val app = vm.selectedApp
             if (app == null) {
-                tvMsg.text = "提示: 请先选择目标应用"
+                tvMsg.text = "Tip: Please select a target app"
                 return
             }
             val nrs = currentNrList
@@ -2322,7 +2322,7 @@ class MainActivity : AppCompatActivity() {
         val nonSysHooks = hooks.filter { it.nr < 0 }
         if (syscallHooked.isEmpty() && nonSysHooks.isEmpty()) {
             filterListContainer.addView(TextView(this).apply {
-                text = "暂无已安装的 Hook"
+                text = "No installed hooks"
                 setTextColor(cSecondary)
                 setPadding(0, dp(4), 0, dp(4))
             })
@@ -2331,7 +2331,7 @@ class MainActivity : AppCompatActivity() {
 
         if (nonSysHooks.isNotEmpty()) {
             filterListContainer.addView(TextView(this).apply {
-                text = "🔧 其他 Hook"
+                text = "🔧 Other hooks"
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 setTextColor(cPrimary)
                 typeface = Typeface.DEFAULT_BOLD
@@ -2395,7 +2395,7 @@ class MainActivity : AppCompatActivity() {
         val extra = hooks.filter { !used.contains(it.nr) }
         if (extra.isNotEmpty()) {
             filterListContainer.addView(TextView(this).apply {
-                text = "＊ 其他"
+                text = "＊ Other"
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 setTextColor(cPrimary)
                 typeface = Typeface.DEFAULT_BOLD
@@ -2440,7 +2440,7 @@ class MainActivity : AppCompatActivity() {
         llSelectedNrs.removeAllViews()
         if (nrs.isEmpty()) {
             llSelectedNrs.addView(TextView(this).apply {
-                text = "未选择任何系统调用"
+                text = "No syscalls selected"
                 setTextColor(cSecondary)
             })
             return
@@ -2459,7 +2459,7 @@ class MainActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
             row.addView(Button(this).apply {
-                text = "删除"
+                text = "Delete"
                 setTextColor(cRed)
                 isAllCaps = false
                 setOnClickListener { vm.removeNr(nr) }

@@ -274,14 +274,14 @@ class MainViewModel : ViewModel() {
                 Log.i(TAG, "enable result: success=${r3.success} output=${r3.output.take(200)} error=${r3.error}")
                 if (r3.success) {
                     _monitoring.postValue(true)
-                    _toast.postValue("监控已启动" +
-                        if (uid >= 0) " (UID: $uid)" else " (全部 APP)")
+                    _toast.postValue("Monitoring started" +
+                        if (uid >= 0) " (UID: $uid)" else " (All apps)")
                 } else {
-                    _toast.postValue("启动监控失败: ${r3.error}")
+                    _toast.postValue("Failed to start monitoring: ${r3.error}")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "startMonitoring exception", e)
-                _toast.postValue("启动异常: ${e.message}")
+                _toast.postValue("Start error: ${e.message}")
             } finally {
                 pollingPaused = false
                 pollOnce()
@@ -323,13 +323,13 @@ class MainViewModel : ViewModel() {
                 Log.i(TAG, "enable result: ${r3.success} ${r3.output.take(100)}")
                 if (r3.success) {
                     _monitoring.postValue(true)
-                    _toast.postValue("监控已启动 (${nrs.size} 个系统调用)")
+                    _toast.postValue("Monitoring started (${nrs.size}  syscalls)")
                 } else {
-                    _toast.postValue("启动失败: ${r3.error}")
+                    _toast.postValue("Start failed: ${r3.error}")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "startMonitoringWithNrs exception", e)
-                _toast.postValue("启动异常: ${e.message}")
+                _toast.postValue("Start error: ${e.message}")
             } finally {
                 pollingPaused = false
                 pollOnce()
@@ -345,12 +345,12 @@ class MainViewModel : ViewModel() {
                 val r = KpmBridge.disable()
                 if (r.success) {
                     _monitoring.postValue(false)
-                    _toast.postValue("监控已停止")
+                    _toast.postValue("Monitoring stopped")
                 } else {
-                    _toast.postValue("停止失败: ${r.error}")
+                    _toast.postValue("Stop failed: ${r.error}")
                 }
             } catch (e: Exception) {
-                _toast.postValue("停止异常: ${e.message}")
+                _toast.postValue("Stop error: ${e.message}")
             } finally {
                 pollingPaused = false
                 pollOnce()
@@ -365,9 +365,9 @@ class MainViewModel : ViewModel() {
             try {
                 val r = KpmBridge.setDoFilpOpen(enabled)
                 if (r.success) {
-                    _toast.postValue(if (enabled) "do_filp_open 已开启" else "do_filp_open 已关闭")
+                    _toast.postValue(if (enabled) "do_filp_open enabled" else "do_filp_open disabled")
                 } else {
-                    _toast.postValue("设置 do_filp_open 失败: ${r.error}")
+                    _toast.postValue("Failed to set do_filp_open: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
@@ -383,9 +383,9 @@ class MainViewModel : ViewModel() {
                 val mode = if (lengthFirst) "length" else "accurate"
                 val r = KpmBridge.setBtMode(mode)
                 if (r.success) {
-                    _toast.postValue(if (lengthFirst) "回溯模式：长度优先" else "回溯模式：准确率优先")
+                    _toast.postValue(if (lengthFirst) "Backtrace mode: Length-first" else "Backtrace mode: Accuracy-first")
                 } else {
-                    _toast.postValue("设置回溯模式失败: ${r.error}")
+                    _toast.postValue("Failed to set backtrace mode: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
@@ -402,9 +402,9 @@ class MainViewModel : ViewModel() {
             try {
                 val r = KpmBridge.setUid(uid)
                 if (r.success) {
-                    _toast.postValue(if (uid < 0) "已切换到监控所有 APP" else "目标 UID: $uid")
+                    _toast.postValue(if (uid < 0) "Switched to monitor all apps" else "Target UID: $uid")
                 } else {
-                    _toast.postValue("设置失败: ${r.error}")
+                    _toast.postValue("Set failed: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
@@ -419,9 +419,9 @@ class MainViewModel : ViewModel() {
             try {
                 val r = KpmBridge.preset(presetName)
                 if (r.success) {
-                    _toast.postValue("预设已应用: $presetName")
+                    _toast.postValue("Preset applied: $presetName")
                 } else {
-                    _toast.postValue("应用失败: ${r.error}")
+                    _toast.postValue("Apply failed: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
@@ -436,9 +436,9 @@ class MainViewModel : ViewModel() {
             try {
                 val r = KpmBridge.setNrs(nrs)
                 if (r.success) {
-                    _toast.postValue("已设置 ${nrs.size} 个系统调用")
+                    _toast.postValue("Set ${nrs.size} syscalls")
                 } else {
-                    _toast.postValue("设置失败: ${r.error}")
+                    _toast.postValue("Set failed: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
@@ -466,7 +466,7 @@ class MainViewModel : ViewModel() {
             pollingPaused = true
             try {
                 val r = KpmBridge.tier2(on)
-                if (r.success) _toast.postValue(if (on) "Tier2 已加载" else "Tier2 已卸载")
+                if (r.success) _toast.postValue(if (on) "Tier2 loaded" else "Tier2 unloaded")
             } finally {
                 pollingPaused = false
                 pollOnce()
@@ -490,7 +490,7 @@ class MainViewModel : ViewModel() {
                     _events.postValue(emptyList())
                     _eventCount.postValue(0)
                 }
-                _toast.postValue("事件已清空")
+                _toast.postValue("Events cleared")
             } finally {
                 pollingPaused = false
                 pollOnce()
@@ -510,7 +510,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             val already = synchronized(nrSet) { nrSet.contains(nr) }
             if (already) {
-                _toast.postValue("NR $nr 已在列表中")
+                _toast.postValue("NR $nr is already in the list")
                 return@launch
             }
             pollingPaused = true
@@ -518,9 +518,9 @@ class MainViewModel : ViewModel() {
                 val r = KpmBridge.enableNr(nr)
                 if (r.success) {
                     synchronized(nrSet) { nrSet.add(nr) }
-                    _toast.postValue("已添加 NR $nr")
+                    _toast.postValue("Added NR $nr")
                 } else {
-                    _toast.postValue("添加失败: ${r.error}")
+                    _toast.postValue("Add failed: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
@@ -533,7 +533,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             val existed = synchronized(nrSet) { nrSet.contains(nr) }
             if (!existed) {
-                _toast.postValue("NR $nr 不在列表中")
+                _toast.postValue("NR $nr is not in the list")
                 return@launch
             }
             pollingPaused = true
@@ -541,9 +541,9 @@ class MainViewModel : ViewModel() {
                 val r = KpmBridge.disableNr(nr)
                 if (r.success) {
                     synchronized(nrSet) { nrSet.remove(nr) }
-                    _toast.postValue("已移除 NR $nr")
+                    _toast.postValue("Removed NR $nr")
                 } else {
-                    _toast.postValue("移除失败: ${r.error}")
+                    _toast.postValue("Remove failed: ${r.error}")
                 }
             } finally {
                 pollingPaused = false
