@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NDK_VERSION: "27.0.12077973"
+      GRADLE_VERSION: "8.7"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +27,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle (AGP 8.1 compatible)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Install Android SDK packages
         run: |
@@ -41,6 +47,7 @@ jobs:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
           KP_DIR: ${{ github.workspace }}/KernelPatch
+          GRADLE_VERSION: ${{ env.GRADLE_VERSION }}
         run: |
           ./scripts/ci/build_kpm_and_apk.sh
 

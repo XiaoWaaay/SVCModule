@@ -25,6 +25,7 @@ bash SVC_PC_View/run_app_socket.sh 8080 0
 
 - GitHub Actions：`.github/workflows/build-kpm-apk.yml`
 - CI 与本地共用构建脚本：`scripts/ci/build_kpm_and_apk.sh`
+- Gradle 兼容性：脚本会优先使用系统中 `< 9` 的 Gradle；若检测到 Gradle 9+ 或未安装，会自动下载并使用 Gradle 8.7（兼容 AGP 8.1）。
 
 本地按 CI 同逻辑执行：
 
