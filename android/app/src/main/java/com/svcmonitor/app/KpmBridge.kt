@@ -6,6 +6,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -30,6 +32,9 @@ object KpmBridge {
     private var superKey = "XiaoLu0129"
     private data class KpmCli(val bin: String, val style: String)
     @Volatile private var cachedKpmCli: KpmCli? = null
+    @Volatile private var ksudEnabled: Boolean = false
+    @Volatile private var ksudTargetUid: Int = -1
+    private val ksudLoggingNrs = linkedSetOf<Int>()
     private val mutex = Mutex()
 
     data class KpmResult(
@@ -137,6 +142,50 @@ object KpmBridge {
         }
     }
 
+    private fun parseNrCsv(csv: String): List<Int> {
+        return csv.split(",").mapNotNull { it.trim().toIntOrNull() }
+    }
+
+    private fun onKsudCommandAccepted(command: String) {
+        when {
+            command == "enable" -> ksudEnabled = true
+            command == "disable" -> ksudEnabled = false
+            command.startsWith("uid ") -> {
+                ksudTargetUid = command.substringAfter("uid ").trim().toIntOrNull() ?: ksudTargetUid
+            }
+            command.startsWith("set_nrs ") -> {
+                ksudLoggingNrs.clear()
+                ksudLoggingNrs.addAll(parseNrCsv(command.substringAfter("set_nrs ")))
+            }
+            command.startsWith("enable_nr ") -> {
+                command.substringAfter("enable_nr ").trim().toIntOrNull()?.let { ksudLoggingNrs.add(it) }
+            }
+            command.startsWith("disable_nr ") -> {
+                command.substringAfter("disable_nr ").trim().toIntOrNull()?.let { ksudLoggingNrs.remove(it) }
+            }
+            command == "disable_all" -> ksudLoggingNrs.clear()
+            // enable_all cannot infer exact list without richer ksud output.
+        }
+    }
+
+    private fun buildKsudStatusJson(): String {
+        val j = JSONObject()
+        j.put("ok", true)
+        j.put("version", "ksud-bridge")
+        j.put("enabled", ksudEnabled)
+        j.put("target_uid", ksudTargetUid)
+        j.put("hooks_installed", 0)
+        j.put("nrs_logging", ksudLoggingNrs.size)
+        j.put("events_total", 0)
+        j.put("events_buffered", 0)
+        j.put("tier2", false)
+        val arr = JSONArray()
+        ksudLoggingNrs.forEach { arr.put(it) }
+        j.put("logging_nrs", arr)
+        j.put("hooks", JSONArray())
+        return j.toString()
+    }
+
     private object PersistentSuShell {
         private var proc: Process? = null
         private var reader: BufferedReader? = null
@@ -239,6 +288,12 @@ object KpmBridge {
                 val output = directOutput
 
                 if (output.isNotEmpty()) {
+                    if (cli.style == "ksud" && output.trim() == "0") {
+                        onKsudCommandAccepted(command)
+                        val synthetic = if (command == "status") buildKsudStatusJson() else """{"ok":true}"""
+                        Log.d(TAG, "execute($command) KSUD rc=0 -> synthetic JSON")
+                        return@withContext KpmResult(true, synthetic)
+                    }
                     val simple = StatusParser.parseSimple(output)
                     if (simple.ok) {
                         Log.d(TAG, "execute($command) OK: ${output.take(200)}")
