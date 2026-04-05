@@ -22,9 +22,12 @@ ensure_gradle() {
   local sys_gradle="${SYS_GRADLE_BIN:-gradle}"
   if command -v "$sys_gradle" >/dev/null 2>&1; then
     local gv major
-    gv="$("$sys_gradle" --version | awk '/Gradle /{print $2; exit}')"
-    major="${gv%%.*}"
-    if [[ -n "$major" && "$major" -lt 9 ]]; then
+    gv="$("$sys_gradle" --version | sed -nE 's/^Gradle ([0-9]+([.][0-9]+){0,2}).*/\1/p' | head -n 1)"
+    major=""
+    if [[ "$gv" =~ ^([0-9]+)([.].*)?$ ]]; then
+      major="${BASH_REMATCH[1]}"
+    fi
+    if [[ -n "$major" ]] && (( major < 9 )); then
       GRADLE_BIN="$sys_gradle"
       return 0
     fi
