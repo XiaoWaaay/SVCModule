@@ -28,7 +28,8 @@ object KpmBridge {
     private const val OUT_FILE = "/data/local/tmp/svc_out.json"
     private const val EVENT_FILE = "/data/local/tmp/svc_events.bin"
     private var superKey = "XiaoLu0129"
-    @Volatile private var cachedKpatch: String? = null
+    private data class KpmCli(val bin: String, val style: String)
+    @Volatile private var cachedKpmCli: KpmCli? = null
     private val mutex = Mutex()
 
     data class KpmResult(
@@ -83,36 +84,57 @@ object KpmBridge {
         }
     }
 
-    private fun resolveKpatchBinary(): String {
-        cachedKpatch?.let { return it }
+    private fun resolveKpmCli(): KpmCli? {
+        cachedKpmCli?.let { return it }
 
-        // Absolute path candidates across APatch / KernelSU variants.
-        val pathCandidates = listOf(
+        // 1) APatch / KernelPatch classic kpatch tool (needs superkey).
+        val kpatchPathCandidates = listOf(
             "/data/adb/ap/bin/kpatch",     // APatch
-            "/data/adb/ksu/bin/kpatch",    // KernelSU (common)
-            "/data/adb/ksud/bin/kpatch",   // KernelSU daemon layout (some builds)
+            "/data/adb/ksu/bin/kpatch",    // Some KSU layouts
+            "/data/adb/ksud/bin/kpatch",   // Some KSU layouts
             "/data/adb/kpatch/bin/kpatch"  // legacy/custom layouts
         )
-        for (p in pathCandidates) {
+        for (p in kpatchPathCandidates) {
             val (code, out) = shellExec("if [ -x '$p' ]; then echo '$p'; fi")
             if (code == 0 && out.trim().isNotEmpty()) {
-                cachedKpatch = p
-                return p
+                return KpmCli(p, "kpatch").also { cachedKpmCli = it }
             }
         }
 
-        // PATH command candidates.
-        val cmdCandidates = listOf("kpatch-android", "kpatch")
-        for (c in cmdCandidates) {
-            val (_, out) = shellExec("command -v $c 2>/dev/null")
+        // 2) KernelSU userspace ksud (no superkey; uses `ksud kpm control`).
+        val ksudPathCandidates = listOf(
+            "/data/adb/ksu/bin/ksud",
+            "/data/adb/ksud/bin/ksud"
+        )
+        for (p in ksudPathCandidates) {
+            val (code, out) = shellExec("if [ -x '$p' ]; then echo '$p'; fi")
+            if (code == 0 && out.trim().isNotEmpty()) {
+                return KpmCli(p, "ksud").also { cachedKpmCli = it }
+            }
+        }
+
+        // 3) PATH command candidates.
+        val cmdCandidates = listOf(
+            KpmCli("kpatch-android", "kpatch"),
+            KpmCli("kpatch", "kpatch"),
+            KpmCli("ksud", "ksud")
+        )
+        for (candidate in cmdCandidates) {
+            val (_, out) = shellExec("command -v ${candidate.bin} 2>/dev/null")
             val found = out.trim()
             if (found.isNotEmpty()) {
-                cachedKpatch = found
-                return found
+                return candidate.copy(bin = found).also { cachedKpmCli = it }
             }
         }
 
-        return ""
+        return null
+    }
+
+    private fun buildCtlCmd(cli: KpmCli, command: String): String {
+        return when (cli.style) {
+            "ksud" -> "${cli.bin} kpm control $MODULE '$command'"
+            else -> "${cli.bin} $superKey kpm ctl0 $MODULE '$command'"
+        }
     }
 
     private object PersistentSuShell {
@@ -203,16 +225,16 @@ object KpmBridge {
     private suspend fun execute(command: String): KpmResult = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
-                val kpatch = resolveKpatchBinary()
-                if (kpatch.isBlank()) {
+                val cli = resolveKpmCli()
+                if (cli == null) {
                     return@withContext KpmResult(
                         false,
                         "",
-                        "kpatch binary not found (APatch/KernelSU path). Please confirm KernelPatch userspace tool is installed."
+                        "kpm userspace CLI not found (kpatch/ksud). Please confirm APatch/KernelSU userspace tool is installed."
                     )
                 }
 
-                val shellCmd = "$kpatch $superKey kpm ctl0 $MODULE '$command'"
+                val shellCmd = buildCtlCmd(cli, command)
                 val (exitCode, directOutput) = shellExec(shellCmd)
                 val output = directOutput
 
@@ -295,15 +317,15 @@ object KpmBridge {
     suspend fun drain(max: Int = 1024): KpmResult = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
-                val kpatch = resolveKpatchBinary()
-                if (kpatch.isBlank()) {
+                val cli = resolveKpmCli()
+                if (cli == null) {
                     return@withContext KpmResult(
                         false,
                         "",
-                        "kpatch binary not found (APatch/KernelSU path). Please confirm KernelPatch userspace tool is installed."
+                        "kpm userspace CLI not found (kpatch/ksud). Please confirm APatch/KernelSU userspace tool is installed."
                     )
                 }
-                val shellCmd = "$kpatch $superKey kpm ctl0 $MODULE 'drain $max'"
+                val shellCmd = buildCtlCmd(cli, "drain $max")
                 val (exitCode, directOutput) = shellExec(shellCmd)
 
                 delay(80)
