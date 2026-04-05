@@ -24,11 +24,11 @@ import java.io.OutputStreamWriter
 object KpmBridge {
 
     private const val TAG = "KpmBridge"
-    private const val KPATCH = "/data/adb/ap/bin/kpatch"
     private const val MODULE = "svc_monitor"
     private const val OUT_FILE = "/data/local/tmp/svc_out.json"
     private const val EVENT_FILE = "/data/local/tmp/svc_events.bin"
     private var superKey = "XiaoLu0129"
+    @Volatile private var cachedKpatch: String? = null
     private val mutex = Mutex()
 
     data class KpmResult(
@@ -81,6 +81,38 @@ object KpmBridge {
         } catch (e: Exception) {
             Pair(-1, (e.message ?: "exec error").toByteArray())
         }
+    }
+
+    private fun resolveKpatchBinary(): String {
+        cachedKpatch?.let { return it }
+
+        // Absolute path candidates across APatch / KernelSU variants.
+        val pathCandidates = listOf(
+            "/data/adb/ap/bin/kpatch",     // APatch
+            "/data/adb/ksu/bin/kpatch",    // KernelSU (common)
+            "/data/adb/ksud/bin/kpatch",   // KernelSU daemon layout (some builds)
+            "/data/adb/kpatch/bin/kpatch"  // legacy/custom layouts
+        )
+        for (p in pathCandidates) {
+            val (code, out) = shellExec("if [ -x '$p' ]; then echo '$p'; fi")
+            if (code == 0 && out.trim().isNotEmpty()) {
+                cachedKpatch = p
+                return p
+            }
+        }
+
+        // PATH command candidates.
+        val cmdCandidates = listOf("kpatch-android", "kpatch")
+        for (c in cmdCandidates) {
+            val (_, out) = shellExec("command -v $c 2>/dev/null")
+            val found = out.trim()
+            if (found.isNotEmpty()) {
+                cachedKpatch = found
+                return found
+            }
+        }
+
+        return ""
     }
 
     private object PersistentSuShell {
@@ -171,7 +203,16 @@ object KpmBridge {
     private suspend fun execute(command: String): KpmResult = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
-                val shellCmd = "$KPATCH $superKey kpm ctl0 $MODULE '$command'"
+                val kpatch = resolveKpatchBinary()
+                if (kpatch.isBlank()) {
+                    return@withContext KpmResult(
+                        false,
+                        "",
+                        "kpatch binary not found (APatch/KernelSU path). Please confirm KernelPatch userspace tool is installed."
+                    )
+                }
+
+                val shellCmd = "$kpatch $superKey kpm ctl0 $MODULE '$command'"
                 val (exitCode, directOutput) = shellExec(shellCmd)
                 val output = directOutput
 
@@ -181,8 +222,13 @@ object KpmBridge {
                         Log.d(TAG, "execute($command) OK: ${output.take(200)}")
                         KpmResult(true, output)
                     } else {
+                        val err = when {
+                            output.contains("not found", ignoreCase = true) -> output
+                            output.contains("permission denied", ignoreCase = true) -> output
+                            else -> simple.error
+                        }
                         Log.w(TAG, "execute($command) FAIL: ${simple.error}")
-                        KpmResult(false, output, simple.error)
+                        KpmResult(false, output, err)
                     }
                 } else {
                     val errMsg = "exit=$exitCode, no output"
@@ -249,7 +295,15 @@ object KpmBridge {
     suspend fun drain(max: Int = 1024): KpmResult = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
-                val shellCmd = "$KPATCH $superKey kpm ctl0 $MODULE 'drain $max'"
+                val kpatch = resolveKpatchBinary()
+                if (kpatch.isBlank()) {
+                    return@withContext KpmResult(
+                        false,
+                        "",
+                        "kpatch binary not found (APatch/KernelSU path). Please confirm KernelPatch userspace tool is installed."
+                    )
+                }
+                val shellCmd = "$kpatch $superKey kpm ctl0 $MODULE 'drain $max'"
                 val (exitCode, directOutput) = shellExec(shellCmd)
 
                 delay(80)
