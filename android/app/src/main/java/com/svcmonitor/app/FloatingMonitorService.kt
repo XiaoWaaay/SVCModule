@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.pm.ServiceInfo
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -29,6 +30,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
+import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +38,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class FloatingMonitorService : Service() {
 
@@ -66,6 +72,7 @@ class FloatingMonitorService : Service() {
     private var useJsonFallback = false
     private var emptyBinPolls = 0
     private val eventBuffer = ArrayDeque<StatusParser.SvcEvent>(300)
+    private val floatingLogFile by lazy { File(getExternalFilesDir(null), "svc_floating_latest.log") }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -80,10 +87,18 @@ class FloatingMonitorService : Service() {
         try {
             wm = getSystemService(WINDOW_SERVICE) as WindowManager
             ensureChannel()
-            startForeground(NOTI_ID, buildNotification())
+            resetFloatingLog()
+            logLine("Floating service starting")
+            val notification = buildNotification()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTI_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            } else {
+                startForeground(NOTI_ID, notification)
+            }
             setupFloatingViews()
             startPolling()
         } catch (e: Exception) {
+            logLine("FATAL start error: ${e.message}")
             Toast.makeText(this, "Failed to start floating monitor: ${e.message}", Toast.LENGTH_LONG).show()
             stopSelf()
         }
@@ -270,6 +285,20 @@ class FloatingMonitorService : Service() {
         (tabFilter as LinearLayout).addView(row4)
 
         // Logs tab
+        val logsActions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        logsActions.addView(makeBtn("Share latest log") { shareLatestFloatingLog() }, LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+        ))
+        logsActions.addView(makeBtn("Clear latest log") {
+            resetFloatingLog()
+            logLine("Log file reset by user")
+            Toast.makeText(this, "Latest log reset", Toast.LENGTH_SHORT).show()
+        }, LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+        ))
+
         logsScroll = ScrollView(this).apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
             setBackgroundColor(Color.parseColor("#111111"))
@@ -284,6 +313,7 @@ class FloatingMonitorService : Service() {
         logsScroll.addView(tvLogs)
         tabLogs = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            addView(logsActions)
             addView(logsScroll, LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -363,6 +393,7 @@ class FloatingMonitorService : Service() {
         val preset = StatusParser.presets.getOrNull(spinnerPreset.selectedItemPosition) ?: return
         scope.launch(Dispatchers.IO) {
             KpmBridge.preset(preset.id)
+            logLine("Preset applied: ${preset.id}")
             launch(Dispatchers.Main) {
                 Toast.makeText(this@FloatingMonitorService, "Preset ${preset.name} applied", Toast.LENGTH_SHORT).show()
             }
@@ -382,6 +413,7 @@ class FloatingMonitorService : Service() {
             KpmBridge.setNrs(nrs)
             selectedNrs.clear()
             selectedNrs.addAll(nrs)
+            logLine("Set NRs (${nrs.size}): ${nrs.joinToString(",")}")
         }
     }
 
@@ -445,12 +477,14 @@ class FloatingMonitorService : Service() {
             tailBuf = ByteArray(0)
             useJsonFallback = false
             emptyBinPolls = 0
+            logLine("Monitoring started for uid=${app.uid} pkg=${app.packageName}")
         }
     }
 
     private fun stopMonitoring() {
         scope.launch(Dispatchers.IO) {
             KpmBridge.disable()
+            logLine("Monitoring stopped")
         }
     }
 
@@ -495,6 +529,8 @@ class FloatingMonitorService : Service() {
                     }
                 }
             }
+        } else {
+            logLine("status() failed: ${s.error.ifBlank { "no output" }}")
         }
     }
 
@@ -532,6 +568,10 @@ class FloatingMonitorService : Service() {
         }
         tvLogs.text = sb.toString()
         logsScroll.post { logsScroll.fullScroll(View.FOCUS_DOWN) }
+        if (eventBuffer.isNotEmpty()) {
+            val e = eventBuffer.last()
+            logLine("event #${e.seq} ${e.name} pid=${e.pid} uid=${e.uid} ${e.desc}")
+        }
     }
 
     private fun togglePanel() {
@@ -563,6 +603,52 @@ class FloatingMonitorService : Service() {
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+    private fun resetFloatingLog() {
+        runCatching {
+            val parent = floatingLogFile.parentFile
+            if (parent != null && !parent.exists()) parent.mkdirs()
+            if (floatingLogFile.exists()) floatingLogFile.delete()
+            floatingLogFile.createNewFile()
+        }
+    }
+
+    private fun logLine(msg: String) {
+        runCatching {
+            rotateLogIfNeeded()
+            val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
+            floatingLogFile.appendText("[$ts] $msg\n")
+        }
+    }
+
+    private fun rotateLogIfNeeded() {
+        if (!floatingLogFile.exists()) return
+        val maxBytes = 2 * 1024 * 1024L
+        if (floatingLogFile.length() <= maxBytes) return
+        val bak = File(floatingLogFile.parentFile, "svc_floating_prev.log")
+        if (bak.exists()) bak.delete()
+        floatingLogFile.renameTo(bak)
+        floatingLogFile.createNewFile()
+    }
+
+    private fun shareLatestFloatingLog() {
+        try {
+            if (!floatingLogFile.exists()) {
+                Toast.makeText(this, "No latest log found", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", floatingLogFile)
+            val i = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(Intent.createChooser(i, "Share floating latest log").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Share failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private inner class DragTouchListener(
         private val params: WindowManager.LayoutParams
