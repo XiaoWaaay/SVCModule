@@ -171,7 +171,7 @@ class FloatingMonitorService : Service() {
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#FF1D2128"))
+            setBackgroundColor(Color.parseColor("#F4FFFFFF"))
             setPadding(dp(10), dp(10), dp(10), dp(10))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -186,7 +186,7 @@ class FloatingMonitorService : Service() {
         }
         val title = TextView(this).apply {
             text = "SVC Floating Monitor"
-            setTextColor(Color.WHITE)
+            setTextColor(Color.BLACK)
             textSize = 16f
             setPadding(0, 0, 0, dp(6))
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
@@ -208,7 +208,7 @@ class FloatingMonitorService : Service() {
 
         tvStatus = TextView(this).apply {
             text = "Status: loading..."
-            setTextColor(Color.parseColor("#D0D7E2"))
+            setTextColor(Color.DKGRAY)
         }
         card.addView(tvStatus)
 
@@ -287,8 +287,6 @@ class FloatingMonitorService : Service() {
 
         etFilterSearch = EditText(this).apply {
             hint = "Search syscall by nr/name"
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.parseColor("#8892A6"))
             inputType = InputType.TYPE_CLASS_TEXT
             setOnEditorActionListener { _, _, _ ->
                 renderAllFilters(text?.toString().orEmpty())
@@ -310,7 +308,6 @@ class FloatingMonitorService : Service() {
                 0,
                 1f
             ).apply { topMargin = dp(6) }
-            setBackgroundColor(Color.parseColor("#FF14171D"))
         }
         llAllFilterItems = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -403,8 +400,6 @@ class FloatingMonitorService : Service() {
         return Button(this).apply {
             this.text = text
             isAllCaps = false
-            setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor("#FF2A3240"))
             setOnClickListener { onClick() }
         }
     }
@@ -490,7 +485,6 @@ class FloatingMonitorService : Service() {
             val cb = android.widget.CheckBox(this).apply {
                 text = "${sc.name} (${sc.nr}) - ${sc.description}"
                 isChecked = selectedNrs.contains(sc.nr)
-                setTextColor(Color.WHITE)
                 setOnCheckedChangeListener { _, checked ->
                     if (checked) selectedNrs.add(sc.nr) else selectedNrs.remove(sc.nr)
                     etNrs.setText(selectedNrs.toList().sorted().joinToString(","))
