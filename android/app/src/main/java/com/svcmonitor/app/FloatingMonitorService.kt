@@ -28,7 +28,6 @@ import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
@@ -62,6 +61,8 @@ class FloatingMonitorService : Service() {
     private lateinit var tabFilter: View
     private lateinit var tabLogs: View
     private lateinit var tabSettings: View
+    private lateinit var etFilterSearch: EditText
+    private lateinit var llAllFilterItems: LinearLayout
     private val selectedNrs = linkedSetOf<Int>()
 
     private var appList: List<AppInfo> = emptyList()
@@ -170,7 +171,7 @@ class FloatingMonitorService : Service() {
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#F4FFFFFF"))
+            setBackgroundColor(Color.parseColor("#FF1D2128"))
             setPadding(dp(10), dp(10), dp(10), dp(10))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -185,7 +186,7 @@ class FloatingMonitorService : Service() {
         }
         val title = TextView(this).apply {
             text = "SVC Floating Monitor"
-            setTextColor(Color.BLACK)
+            setTextColor(Color.WHITE)
             textSize = 16f
             setPadding(0, 0, 0, dp(6))
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
@@ -207,7 +208,7 @@ class FloatingMonitorService : Service() {
 
         tvStatus = TextView(this).apply {
             text = "Status: loading..."
-            setTextColor(Color.DKGRAY)
+            setTextColor(Color.parseColor("#D0D7E2"))
         }
         card.addView(tvStatus)
 
@@ -263,7 +264,7 @@ class FloatingMonitorService : Service() {
 
         val row3 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         row3.addView(makeBtn("Set NRs") { setNrs() }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        row3.addView(makeBtn("Deep filter") { showDeepFilterDialog() }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        row3.addView(makeBtn("Apply selected") { applySelectedNrs() }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         (tabFilter as LinearLayout).addView(row3)
 
         val row4 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
@@ -283,6 +284,41 @@ class FloatingMonitorService : Service() {
             scope.launch(Dispatchers.IO) { KpmBridge.disableAll() }
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         (tabFilter as LinearLayout).addView(row4)
+
+        etFilterSearch = EditText(this).apply {
+            hint = "Search syscall by nr/name"
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.parseColor("#8892A6"))
+            inputType = InputType.TYPE_CLASS_TEXT
+            setOnEditorActionListener { _, _, _ ->
+                renderAllFilters(text?.toString().orEmpty())
+                true
+            }
+            addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    renderAllFilters(s?.toString().orEmpty())
+                }
+            })
+        }
+        (tabFilter as LinearLayout).addView(etFilterSearch)
+
+        val filterScroll = ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            ).apply { topMargin = dp(6) }
+            setBackgroundColor(Color.parseColor("#FF14171D"))
+        }
+        llAllFilterItems = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+        }
+        filterScroll.addView(llAllFilterItems)
+        (tabFilter as LinearLayout).addView(filterScroll)
+        renderAllFilters("")
 
         // Logs tab
         val logsActions = LinearLayout(this).apply {
@@ -367,6 +403,8 @@ class FloatingMonitorService : Service() {
         return Button(this).apply {
             this.text = text
             isAllCaps = false
+            setTextColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor("#FF2A3240"))
             setOnClickListener { onClick() }
         }
     }
@@ -414,53 +452,52 @@ class FloatingMonitorService : Service() {
             selectedNrs.clear()
             selectedNrs.addAll(nrs)
             logLine("Set NRs (${nrs.size}): ${nrs.joinToString(",")}")
+            launch(Dispatchers.Main) { renderAllFilters(etFilterSearch.text?.toString().orEmpty()) }
         }
     }
 
-    private fun showDeepFilterDialog() {
-        val hooksFromCategory = StatusParser.categories
-            .flatMap { it.syscalls.map { sc -> sc.nr to "${sc.name} (${sc.nr})" } }
-            .distinctBy { it.first }
-            .sortedBy { it.first }
-        if (hooksFromCategory.isEmpty()) {
-            Toast.makeText(this, "No syscall catalog available", Toast.LENGTH_SHORT).show()
+    private fun applySelectedNrs() {
+        val nrs = selectedNrs.toList().sorted()
+        etNrs.setText(nrs.joinToString(","))
+        scope.launch(Dispatchers.IO) {
+            if (nrs.isEmpty()) KpmBridge.disableAll() else KpmBridge.setNrs(nrs)
+            logLine("Applied selected filters: ${nrs.size}")
+        }
+    }
+
+    private fun renderAllFilters(rawQuery: String) {
+        if (!::llAllFilterItems.isInitialized) return
+        val q = rawQuery.trim().lowercase()
+        llAllFilterItems.removeAllViews()
+        val all = StatusParser.categories
+            .flatMap { it.syscalls }
+            .distinctBy { it.nr }
+            .sortedBy { it.nr }
+            .filter { e ->
+                q.isBlank() ||
+                    e.name.lowercase().contains(q) ||
+                    e.nr.toString().contains(q) ||
+                    e.description.lowercase().contains(q)
+            }
+        if (all.isEmpty()) {
+            llAllFilterItems.addView(TextView(this).apply {
+                text = "No matching syscall"
+                setTextColor(Color.parseColor("#8892A6"))
+            })
             return
         }
-
-        val labels = hooksFromCategory.map { it.second }.toTypedArray()
-        val checked = hooksFromCategory.map { selectedNrs.contains(it.first) }.toBooleanArray()
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Deep filter management")
-            .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
-                val nr = hooksFromCategory[which].first
-                if (isChecked) selectedNrs.add(nr) else selectedNrs.remove(nr)
-            }
-            .setPositiveButton("Apply") { _, _ ->
-                val nrs = selectedNrs.toList().sorted()
-                etNrs.setText(nrs.joinToString(","))
-                scope.launch(Dispatchers.IO) {
-                    if (nrs.isEmpty()) {
-                        KpmBridge.disableAll()
-                    } else {
-                        KpmBridge.setNrs(nrs)
-                    }
+        for (sc in all) {
+            val cb = android.widget.CheckBox(this).apply {
+                text = "${sc.name} (${sc.nr}) - ${sc.description}"
+                isChecked = selectedNrs.contains(sc.nr)
+                setTextColor(Color.WHITE)
+                setOnCheckedChangeListener { _, checked ->
+                    if (checked) selectedNrs.add(sc.nr) else selectedNrs.remove(sc.nr)
+                    etNrs.setText(selectedNrs.toList().sorted().joinToString(","))
                 }
             }
-            .setNeutralButton("All") { _, _ ->
-                selectedNrs.clear()
-                selectedNrs.addAll(hooksFromCategory.map { it.first })
-                etNrs.setText(selectedNrs.joinToString(","))
-            }
-            .setNegativeButton("Cancel", null)
-            .create()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            dialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
-        } else {
-            @Suppress("DEPRECATION")
-            dialog.window?.setType(WindowManager.LayoutParams.TYPE_PHONE)
+            llAllFilterItems.addView(cb)
         }
-        dialog.show()
     }
 
     private fun startMonitoring() {
