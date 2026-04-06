@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/FloatingCard.ListItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/item_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingStart="0dp"
+        android:paddingTop="@dimen/floating_spacing_xs"
+        android:paddingEnd="@dimen/floating_spacing_xs"
+        android:paddingBottom="@dimen/floating_spacing_xs">
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/checkbox"
+            style="@style/FloatingCheckBox"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- 冻结按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/freeze_button"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/icon_pause_24px"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="24dp"
+            app:iconTint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/checkbox"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- 名称 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/name_text"
+            style="@style/FloatingText.Monospace"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/floating_text_primary"
+            android:textSize="@dimen/floating_text_body"
+            app:layout_constraintBottom_toTopOf="@id/address_text"
+            app:layout_constraintEnd_toStartOf="@id/type_text"
+            app:layout_constraintStart_toEndOf="@id/freeze_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <!-- 地址 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/address_text"
+            style="@style/FloatingText.Address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="7FFFFFFF"
+            android:textSize="@dimen/floating_text_body"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/freeze_button"
+            app:layout_constraintTop_toBottomOf="@id/name_text" />
+
+        <!-- 数值（在地址右边同一行） -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/value_text"
+            style="@style/FloatingText.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="4dp"
+            android:maxLines="1"
+            android:text="0"
+            android:textSize="@dimen/floating_text_body"
+            app:autoSizeMaxTextSize="14sp"
+            app:autoSizeMinTextSize="8sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintBaseline_toBaselineOf="@id/address_text"
+            app:layout_constraintEnd_toStartOf="@id/backup_value_text"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toEndOf="@id/address_text" />
+
+        <!-- 备份值 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/backup_value_text"
+            style="@style/FloatingText.Body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#88FFFFFF"
+            android:textSize="@dimen/floating_text_small"
+            android:visibility="gone"
+            app:layout_constraintBaseline_toBaselineOf="@id/address_text"
+            app:layout_constraintEnd_toStartOf="@id/range_text" />
+
+        <!-- 类型 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/type_text"
+            style="@style/FloatingText.Type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:text="D"
+            app:layout_constraintBottom_toTopOf="@id/range_text"
+            app:layout_constraintEnd_toStartOf="@id/delete_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <!-- 范围 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/range_text"
+            style="@style/FloatingText.Range"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:text="B"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/delete_button"
+            app:layout_constraintTop_toBottomOf="@id/type_text" />
+
+        <!-- 删除按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete_button"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@string/content_desc_delete"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/baseline_delete_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="20dp"
+            app:iconTint="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

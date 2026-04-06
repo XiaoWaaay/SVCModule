@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/floating_background_overlay">
+
+    <!-- 横屏侧边栏 (默认隐藏) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/sidebar_container"
+        android:layout_width="@dimen/floating_sidebar_width"
+        android:layout_height="0dp"
+        android:background="@color/floating_toolbar"
+        android:elevation="@dimen/floating_elevation_toolbar"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <!-- 当前附加应用图标 -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/sidebar_app_icon"
+            android:layout_width="@dimen/floating_icon_xl"
+            android:layout_height="@dimen/floating_icon_xl"
+            android:layout_marginTop="@dimen/floating_spacing_md"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_launcher"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
+
+        <!-- 侧边栏 NavigationRail -->
+        <com.google.android.material.navigationrail.NavigationRailView
+            android:id="@+id/sidebar_navigation_rail"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/floating_spacing_sm"
+            android:background="@android:color/transparent"
+            app:itemActiveIndicatorStyle="@null"
+            app:itemIconTint="@color/tab_icon_color"
+            app:itemRippleColor="@android:color/transparent"
+            app:labelVisibilityMode="unlabeled"
+            app:layout_constraintBottom_toTopOf="@id/sidebar_btn_close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sidebar_app_icon"
+            app:menu="@menu/navigation_menu" />
+
+        <!-- Close按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sidebar_btn_close"
+            style="@style/FloatingButton.MaterialIcon.Close"
+            android:layout_marginBottom="@dimen/floating_spacing_md"
+            android:contentDescription="@string/content_desc_close"
+            app:icon="@drawable/icon_close_24px"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 竖屏顶部工具栏 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/toolbar_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/floating_toolbar"
+        android:elevation="@dimen/floating_elevation_toolbar"
+        android:paddingStart="@dimen/floating_spacing_sm"
+        android:paddingEnd="@dimen/floating_spacing_sm"
+        android:paddingTop="@dimen/floating_spacing_xs"
+        android:paddingBottom="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- 当前附加应用图标 -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/attached_app_icon"
+            android:layout_width="@dimen/floating_icon_xl"
+            android:layout_height="@dimen/floating_icon_xl"
+            android:layout_marginEnd="@dimen/floating_spacing_md"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_launcher"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
+
+        <!-- TabLayout (水平方向) -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/floating_height_toolbar"
+            android:background="@android:color/transparent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_close_fullscreen"
+            app:layout_constraintStart_toEndOf="@id/attached_app_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tabGravity="fill"
+            app:tabPadding="0dp"
+            app:tabIconTint="@color/tab_icon_color"
+            app:tabIndicatorColor="?attr/colorPrimary"
+            app:tabIndicatorFullWidth="false"
+            app:tabIndicatorGravity="bottom"
+            app:tabMode="fixed"
+            app:tabTextColor="?attr/colorOnSurface" />
+
+        <!-- Close按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_close_fullscreen"
+            style="@style/FloatingButton.MaterialIcon.Close"
+            android:contentDescription="@string/content_desc_close"
+            app:icon="@drawable/icon_close_24px"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 内容区域 -->
+
+    <!-- 底部信息栏 -->
+
+    <FrameLayout
+        android:id="@+id/content_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_info_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_container"
+        app:layout_constraintVertical_bias="1.0">
+
+        <!-- 设置页面 -->
+        <include
+            android:id="@+id/content_settings"
+            layout="@layout/floating_settings_layout"
+            android:visibility="gone" />
+
+        <!-- Search页面 -->
+        <include
+            android:id="@+id/content_search"
+            layout="@layout/floating_search_layout"
+            android:visibility="gone" />
+
+        <!-- 保存的Address -->
+        <include
+            android:id="@+id/content_saved_addresses"
+            layout="@layout/floating_saved_addresses_layout"
+            android:visibility="gone" />
+
+        <!-- Memory预览 -->
+        <include
+            android:id="@+id/content_memory_preview"
+            layout="@layout/floating_memory_preview_layout"
+            android:visibility="gone" />
+
+        <!-- 断点 -->
+        <include
+            android:id="@+id/content_breakpoints"
+            layout="@layout/floating_breakpoints_layout"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottom_info_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/floating_spacing_xl"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_selected_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/floating_spacing_md"
+            android:paddingBottom="@dimen/floating_spacing_xs"
+            android:text="[0]"
+            android:textColor="@color/floating_primary"
+            android:textSize="@dimen/floating_text_caption"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tv_selected_memory_ranges"
+            app:layout_constraintHorizontal_chainStyle="packed" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_selected_memory_ranges"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingStart="@dimen/floating_spacing_sm"
+            android:paddingEnd="@dimen/floating_spacing_md"
+            android:paddingBottom="@dimen/floating_spacing_xs"
+            android:text="Jh,Ch,Ca,Cb,Cd,Ps,A,Xs"
+            android:textColor="@color/floating_text_primary"
+            android:textSize="@dimen/floating_text_caption"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tv_selected_count"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 横屏模式右上角Close按钮 (放在最后确保在最上层) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_close_landscape"
+        style="@style/FloatingButton.MaterialIcon.Close"
+        android:layout_marginTop="@dimen/floating_spacing_sm"
+        android:layout_marginEnd="@dimen/floating_spacing_sm"
+        android:contentDescription="@string/content_desc_close"
+        android:visibility="gone"
+        app:icon="@drawable/icon_close_24px"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

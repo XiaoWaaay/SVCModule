@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<moe.fuqiuluo.mamu.widget.FixedLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:minWidth="280dp"
+    android:orientation="vertical"
+    app:maxWidthPercent="0.8"
+    app:maxHeightPercent="0.9">
+
+    <!-- Title栏 -->
+    <LinearLayout
+        android:id="@+id/title_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/floating_spacing_lg"
+        android:paddingBottom="@dimen/floating_spacing_md">
+
+        <ImageView
+            android:id="@+id/icon_title"
+            android:layout_width="@dimen/floating_icon_md"
+            android:layout_height="@dimen/floating_icon_md"
+            android:src="@drawable/icon_delete_24px"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="@string/label_remove" />
+
+        <TextView
+            android:id="@+id/dialog_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dialog_remove_title"
+            android:textColor="#FFFFFF"
+            android:textSize="@dimen/floating_text_h2"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#2F2F2F" />
+
+    <!-- 选项列表 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/floating_spacing_sm">
+
+        <!-- 移除全部选项 -->
+        <LinearLayout
+            android:id="@+id/option_remove_all"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_settings_item_ripple"
+            android:padding="@dimen/floating_spacing_lg"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="@dimen/floating_icon_md"
+                android:layout_height="@dimen/floating_icon_md"
+                android:src="@drawable/icon_delete_24px"
+                android:tint="#FF5252"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/option_remove_all" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/option_remove_all"
+                android:textColor="#FF5252"
+                android:textSize="@dimen/floating_text_h3"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Restore并移除选项 -->
+        <LinearLayout
+            android:id="@+id/option_restore_and_remove"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_settings_item_ripple"
+            android:padding="@dimen/floating_spacing_lg"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/floating_icon_md"
+                android:layout_height="@dimen/floating_icon_md"
+                android:src="@drawable/history_24px"
+                android:tint="#FFAB00"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/option_restore_and_remove" />
+
+            <TextView
+                android:id="@+id/text_restore_and_remove"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/option_restore_and_remove"
+                android:textColor="#FFAB00"
+                android:textSize="@dimen/floating_text_h3" />
+
+        </LinearLayout>
+
+        <!-- 移除选中选项 -->
+        <LinearLayout
+            android:id="@+id/option_remove_selected"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_settings_item_ripple"
+            android:padding="@dimen/floating_spacing_lg"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/floating_icon_md"
+                android:layout_height="@dimen/floating_icon_md"
+                android:src="@drawable/deselect_24px"
+                android:tint="#FF5252"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/option_remove_selected" />
+
+            <TextView
+                android:id="@+id/text_remove_selected"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/option_remove_selected"
+                android:textColor="#FF5252"
+                android:textSize="@dimen/floating_text_h3" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#2F2F2F" />
+
+    <!-- 按钮区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:padding="@dimen/floating_spacing_sm">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:minWidth="64dp"
+            android:paddingHorizontal="@dimen/floating_spacing_lg"
+            android:paddingVertical="@dimen/floating_spacing_sm"
+            android:text="@string/button_cancel"
+            android:textColor="#CCCCCC" />
+
+    </LinearLayout>
+
+</moe.fuqiuluo.mamu.widget.FixedLinearLayout>

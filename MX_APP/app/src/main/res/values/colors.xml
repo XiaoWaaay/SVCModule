@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Switch 开启状态颜色 -->
+    <color name="switch_thumb_checked">#64B5F6</color>
+    <color name="switch_track_checked">#42A5F5</color>
+
+    <!-- Switch 关闭状态颜色 -->
+    <color name="switch_thumb_unchecked">#757575</color>
+    <color name="switch_track_unchecked">#424242</color>
+
+    <!-- 原有的主题色 -->
+    <color name="primary_light_blue">#BBDEFB</color>
+    <color name="dark_gray">#4D4D4D</color>
+    <color name="white">#FFFFFF</color>
+</resources>

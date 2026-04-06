@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_settings"
+        android:icon="@drawable/icon_settings_24px"
+        android:title="@string/tab_settings" />
+    <item
+        android:id="@+id/navigation_search"
+        android:icon="@drawable/icon_search_24px"
+        android:title="@string/tab_search" />
+    <item
+        android:id="@+id/navigation_saved_addresses"
+        android:icon="@drawable/icon_save_24px"
+        android:title="@string/tab_saved_addresses" />
+    <item
+        android:id="@+id/navigation_memory_preview"
+        android:icon="@drawable/icon_list_24px"
+        android:title="@string/tab_memory_preview" />
+    <item
+        android:id="@+id/navigation_breakpoints"
+        android:icon="@drawable/icon_bug_report_24px"
+        android:title="@string/tab_breakpoints" />
+</menu>

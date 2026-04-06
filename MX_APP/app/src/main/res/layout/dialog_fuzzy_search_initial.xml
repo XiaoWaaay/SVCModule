@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<moe.fuqiuluo.mamu.widget.FixedLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:orientation="vertical"
+    android:padding="@dimen/floating_spacing_lg"
+    app:maxHeightPercent="0.9"
+    app:maxWidthPercent="0.9">
+
+    <!-- Title -->
+    <com.google.android.material.textview.MaterialTextView
+        style="@style/FloatingText.H2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/floating_spacing_xs"
+        android:text="@string/fuzzy_search_dialog_title" />
+
+    <!-- 副Title -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_subtitle"
+        style="@style/FloatingText.Caption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/floating_spacing_md"
+        android:text="@string/fuzzy_search_initial_subtitle" />
+
+    <!-- 当前结果统计 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_current_results"
+        style="@style/FloatingText.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/floating_spacing_md"
+        android:text="@string/fuzzy_search_current_results"
+        android:textColor="@color/floating_primary"
+        android:visibility="gone" />
+
+    <!-- 数据类型选择（初始模式） -->
+    <LinearLayout
+        android:id="@+id/layout_initial_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/floating_spacing_md"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/FloatingText.Body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/floating_spacing_sm"
+            android:text="@string/label_type" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/btn_select_type"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/floating_height_button_sm"
+            android:layout_weight="1"
+            android:background="@drawable/bg_transparent_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingStart="@dimen/floating_spacing_md"
+            android:paddingEnd="@dimen/floating_spacing_md"
+            android:text="DWORD"
+            android:textColor="@color/floating_text_primary"
+            android:textSize="@dimen/floating_text_caption" />
+    </LinearLayout>
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/divider_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/floating_spacing_xs"
+        android:layout_marginBottom="@dimen/floating_spacing_md"
+        app:dividerColor="@color/floating_divider" />
+
+    <!-- 底部按钮 -->
+    <LinearLayout
+        android:id="@+id/layout_bottom_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel"
+            style="@style/FloatingButton.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/floating_spacing_sm"
+            android:text="@string/button_cancel" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_search"
+            style="@style/FloatingButton.Primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/floating_spacing_sm"
+            android:text="@string/button_search" />
+
+    </LinearLayout>
+
+</moe.fuqiuluo.mamu.widget.FixedLinearLayout>

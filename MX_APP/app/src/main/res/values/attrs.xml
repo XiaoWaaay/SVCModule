@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FixedLinearLayout">
+        <!-- 高度绝对值上限 -->
+        <attr name="maxHeight" format="dimension"/>
+        <!-- 屏幕高度百分比上限（0~1），可与 maxHeight 同时存在，取两者较小 -->
+        <attr name="maxHeightPercent" format="float"/>
+
+        <!-- 宽度绝对值上限 -->
+        <attr name="maxWidth" format="dimension"/>
+        <!-- 屏幕宽度百分比上限（0~1），可与 maxWidth 同时存在，取两者较小 -->
+        <attr name="maxWidthPercent" format="float"/>
+    </declare-styleable>
+
+    <declare-styleable name="BuiltinKeyboard">
+        <!-- 默认是否展开键盘 -->
+        <attr name="defaultExpanded" format="boolean"/>
+    </declare-styleable>
+</resources>

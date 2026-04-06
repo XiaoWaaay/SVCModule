@@ -1,0 +1,3 @@
+[workspace]
+members = ["jni-core", "jni-derive", "jni-facade"]
+resolver = "2"

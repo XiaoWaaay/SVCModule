@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<moe.fuqiuluo.mamu.widget.FixedLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:orientation="vertical"
+    android:padding="@dimen/floating_spacing_md"
+    app:maxWidthPercent="0.85"
+    app:maxHeightPercent="0.9">
+
+    <TextView
+        style="@style/FloatingText.H2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Export Memory"
+        android:textColor="@color/floating_text_primary" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/floating_spacing_sm"
+        android:layout_marginBottom="@dimen/floating_spacing_sm"
+        android:background="@color/floating_divider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/FloatingText.Body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="From" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/input_address_start"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/floating_height_button_sm"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="00000000"
+                android:imeOptions="actionNext"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"
+                android:paddingStart="@dimen/floating_spacing_xs"
+                android:paddingEnd="@dimen/floating_spacing_xs"
+                android:textColor="@color/floating_text_primary"
+                android:textColorHint="@color/floating_text_secondary"
+                android:textCursorDrawable="@null" />
+
+            <ImageView
+                android:id="@+id/btn_pick_start_segment"
+                android:layout_width="@dimen/floating_icon_lg"
+                android:layout_height="@dimen/floating_icon_lg"
+                android:layout_marginStart="@dimen/floating_spacing_sm"
+                android:background="@drawable/ripple_item_background"
+                android:contentDescription="Choose start memory region"
+                android:padding="@dimen/floating_spacing_xs"
+                android:src="@drawable/icon_arrow_drop_down_24px"
+                app:tint="@color/floating_primary_light" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/floating_primary_light" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/floating_spacing_sm"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/FloatingText.Body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="To" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/input_address_end"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/floating_height_button_sm"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="FFFFFFFF"
+                android:imeOptions="actionNext"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"
+                android:paddingStart="@dimen/floating_spacing_xs"
+                android:paddingEnd="@dimen/floating_spacing_xs"
+                android:textColor="@color/floating_text_primary"
+                android:textColorHint="@color/floating_text_secondary"
+                android:textCursorDrawable="@null" />
+
+            <ImageView
+                android:id="@+id/btn_pick_end_segment"
+                android:layout_width="@dimen/floating_icon_lg"
+                android:layout_height="@dimen/floating_icon_lg"
+                android:layout_marginStart="@dimen/floating_spacing_sm"
+                android:background="@drawable/ripple_item_background"
+                android:contentDescription="Choose end memory region"
+                android:padding="@dimen/floating_spacing_xs"
+                android:src="@drawable/icon_arrow_drop_down_24px"
+                app:tint="@color/floating_primary_light" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/floating_primary_light" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/floating_spacing_sm"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/FloatingText.Body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Path" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/input_export_path"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/floating_height_button_sm"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="/sdcard/Mamu/export"
+                android:imeOptions="actionDone"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"
+                android:paddingStart="@dimen/floating_spacing_xs"
+                android:paddingEnd="@dimen/floating_spacing_xs"
+                android:textColor="@color/floating_text_primary"
+                android:textColorHint="@color/floating_text_secondary"
+                android:textCursorDrawable="@null" />
+
+            <ImageView
+                android:id="@+id/btn_pick_export_path"
+                android:layout_width="@dimen/floating_icon_lg"
+                android:layout_height="@dimen/floating_icon_lg"
+                android:layout_marginStart="@dimen/floating_spacing_sm"
+                android:background="@drawable/ripple_item_background"
+                android:contentDescription="Choose export path"
+                android:padding="@dimen/floating_spacing_xs"
+                android:src="@drawable/icon_folder_24px"
+                app:tint="@color/floating_primary_light" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/floating_primary_light" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/floating_spacing_sm"
+        android:background="@color/floating_divider" />
+
+    <moe.fuqiuluo.mamu.widget.BuiltinKeyboard
+        android:id="@+id/builtin_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/floating_spacing_sm" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/floating_spacing_md"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel"
+            style="@style/FloatingButton.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:textColor="@color/floating_primary_light" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_export"
+            style="@style/FloatingButton.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/floating_spacing_sm"
+            android:text="Export"
+            android:textColor="@color/floating_primary_light" />
+
+    </LinearLayout>
+
+</moe.fuqiuluo.mamu.widget.FixedLinearLayout>

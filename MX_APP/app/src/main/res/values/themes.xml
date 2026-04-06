@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.MX" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Material 3 主题 -->
+        <item name="colorPrimary">@color/floating_primary</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/floating_primary</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSurface">@color/floating_surface</item>
+        <item name="colorOnSurface">@color/floating_text_primary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- 文本选中高亮颜色 -->
+        <item name="android:textColorHighlight">@color/floating_text_highlight</item>
+    </style>
+</resources>

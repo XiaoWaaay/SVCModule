@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floating_height_button"
+        android:orientation="horizontal"
+        android:weightSum="7">
+
+        <Button
+            android:id="@+id/key_equal"
+            style="@style/KeyboardButton"
+            android:text="=" />
+
+        <Button
+            android:id="@+id/key_plus"
+            style="@style/KeyboardButton"
+            android:text="+" />
+
+        <Button
+            android:id="@+id/key_minus"
+            style="@style/KeyboardButton"
+            android:text="-" />
+
+        <Button
+            android:id="@+id/key_lparen"
+            style="@style/KeyboardButton"
+            android:text="(" />
+
+        <Button
+            android:id="@+id/key_rparen"
+            style="@style/KeyboardButton"
+            android:text=")" />
+
+        <Button
+            android:id="@+id/key_and"
+            style="@style/KeyboardButton"
+            android:text="&amp;" />
+
+        <ImageButton
+            android:id="@+id/key_delete"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Delete"
+            android:src="@drawable/backspace_24px" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floating_height_button"
+        android:orientation="horizontal"
+        android:weightSum="7">
+
+        <Button
+            android:id="@+id/key_dot"
+            style="@style/KeyboardButton"
+            android:text="." />
+
+        <Button
+            android:id="@+id/key_star"
+            style="@style/KeyboardButton"
+            android:text="*" />
+
+        <Button
+            android:id="@+id/key_slash"
+            style="@style/KeyboardButton"
+            android:text="/" />
+
+        <Button
+            android:id="@+id/key_lt"
+            style="@style/KeyboardButton"
+            android:text="&lt;" />
+
+        <Button
+            android:id="@+id/key_gt"
+            style="@style/KeyboardButton"
+            android:text="&gt;" />
+
+        <Button
+            android:id="@+id/key_pipe"
+            style="@style/KeyboardButton"
+            android:text="|" />
+
+        <ImageButton
+            android:id="@+id/key_paste"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Paste"
+            android:src="@drawable/content_paste_24px" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floating_height_button"
+        android:orientation="horizontal"
+        android:weightSum="7">
+
+        <Button
+            android:id="@+id/key_tilde"
+            style="@style/KeyboardButton"
+            android:text="~" />
+
+        <Button
+            android:id="@+id/key_caret"
+            style="@style/KeyboardButton"
+            android:text="^" />
+
+        <Button
+            android:id="@+id/key_percent"
+            style="@style/KeyboardButton"
+            android:text="%" />
+
+        <Button
+            android:id="@+id/key_space"
+            style="@style/KeyboardButton"
+            android:text=" " />
+
+        <Button
+            android:id="@+id/key_lbracket"
+            style="@style/KeyboardButton"
+            android:text="[" />
+
+        <Button
+            android:id="@+id/key_rbracket"
+            style="@style/KeyboardButton"
+            android:text="]" />
+
+        <Button
+            android:id="@+id/key_colon"
+            style="@style/KeyboardButton"
+            android:text=":" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floating_height_button"
+        android:orientation="horizontal"
+        android:weightSum="7">
+
+        <Button
+            android:id="@+id/key_backslash"
+            style="@style/KeyboardButton"
+            android:text="\\" />
+
+        <ImageButton
+            android:id="@+id/key_select_all"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Select All"
+            android:src="@drawable/select_all_24px" />
+
+        <ImageButton
+            android:id="@+id/key_history"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="History"
+            android:src="@drawable/history_24px" />
+
+        <Button
+            android:id="@+id/key_hash"
+            style="@style/KeyboardButton"
+            android:text="#" />
+
+        <Button
+            android:id="@+id/key_lbrace"
+            style="@style/KeyboardButton"
+            android:text="{" />
+
+        <Button
+            android:id="@+id/key_rbrace"
+            style="@style/KeyboardButton"
+            android:text="}" />
+
+        <Button
+            android:id="@+id/key_semicolon"
+            style="@style/KeyboardButton"
+            android:text=";" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floating_height_button"
+        android:orientation="horizontal"
+        android:weightSum="7">
+
+        <Button
+            android:id="@+id/key_quote"
+            style="@style/KeyboardButton"
+            android:text="'" />
+
+        <Button
+            android:id="@+id/key_dquote"
+            style="@style/KeyboardButton"
+            android:text="&quot;" />
+
+        <ImageButton
+            android:id="@+id/key_number_panel"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Number Pad"
+            android:src="@drawable/dialpad_24px" />
+
+        <Button
+            android:id="@+id/key_comma"
+            style="@style/KeyboardButton"
+            android:text="," />
+
+        <ImageButton
+            android:id="@+id/key_move_left"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Move left"
+            android:src="@drawable/arrow_left_alt_24px" />
+
+        <ImageButton
+            android:id="@+id/key_move_right"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Move right"
+            android:src="@drawable/arrow_right_alt_24px" />
+
+        <ImageButton
+            android:id="@+id/key_collapse"
+            style="@style/KeyboardIconButton"
+            android:contentDescription="Collapse"
+            android:src="@drawable/unfold_less_24px" />
+    </LinearLayout>
+
+</LinearLayout>

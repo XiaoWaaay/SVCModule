@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 间距系统 - 为小屏高密度设备优化 (sw=360dp, 如480dpi 5.44寸屏) -->
+    <!-- 相比默认值缩小约25% -->
+    <dimen name="floating_spacing_xxs">2dp</dimen>
+    <dimen name="floating_spacing_xs">3dp</dimen>
+    <dimen name="floating_spacing_sm">6dp</dimen>
+    <dimen name="floating_spacing_md">9dp</dimen>
+    <dimen name="floating_spacing_lg">12dp</dimen>
+    <dimen name="floating_spacing_xl">18dp</dimen>
+    <dimen name="floating_spacing_xxl">24dp</dimen>
+
+    <!-- 组件高度 -->
+    <dimen name="floating_height_toolbar">42dp</dimen>
+    <dimen name="floating_sidebar_width">42dp</dimen>
+    <dimen name="floating_height_tab">36dp</dimen>
+    <dimen name="floating_height_button">36dp</dimen>
+    <dimen name="floating_height_button_sm">30dp</dimen>
+    <dimen name="floating_height_input">36dp</dimen>
+    <dimen name="floating_height_list_item">42dp</dimen>
+    <dimen name="floating_height_list_item_sm">36dp</dimen>
+    <dimen name="floating_height_status_bar">20dp</dimen>
+
+    <!-- 图标尺寸 -->
+    <dimen name="floating_icon_ssm">10dp</dimen>
+    <dimen name="floating_icon_sm">12dp</dimen>
+    <dimen name="floating_icon_md">18dp</dimen>
+    <dimen name="floating_icon_tab">20dp</dimen>
+    <dimen name="floating_icon_lg">24dp</dimen>
+    <dimen name="floating_icon_xl">30dp</dimen>
+    <dimen name="floating_icon_xxl">48dp</dimen>
+
+    <!-- 圆角 -->
+    <dimen name="floating_radius_sm">3dp</dimen>
+    <dimen name="floating_radius_md">6dp</dimen>
+    <dimen name="floating_radius_lg">9dp</dimen>
+    <dimen name="floating_radius_xl">12dp</dimen>
+    <dimen name="floating_radius_round">999dp</dimen>
+
+    <!-- 阴影/Elevation -->
+    <dimen name="floating_elevation_card">2dp</dimen>
+    <dimen name="floating_elevation_toolbar">3dp</dimen>
+    <dimen name="floating_elevation_dialog">6dp</dimen>
+    <dimen name="floating_elevation_fab">5dp</dimen>
+
+    <!-- 边框宽度 -->
+    <dimen name="floating_stroke_thin">0.5dp</dimen>
+    <dimen name="floating_stroke_normal">1dp</dimen>
+    <dimen name="floating_stroke_thick">1.5dp</dimen>
+    <dimen name="floating_stroke_icon">2dp</dimen>         <!-- 图标边框 -->
+
+    <!-- 最小触摸区域 -->
+    <dimen name="floating_touch_target">36dp</dimen>
+
+    <!-- 字体大小 -->
+    <dimen name="floating_text_h1">16sp</dimen>
+    <dimen name="floating_text_h2">15sp</dimen>
+    <dimen name="floating_text_h3">14sp</dimen>
+    <dimen name="floating_text_body">12sp</dimen>
+    <dimen name="floating_text_caption">10sp</dimen>
+    <dimen name="floating_text_small">9sp</dimen>
+    <dimen name="floating_text_tiny">8sp</dimen>       <!-- 超小字 -->
+
+    <!-- 最小宽度 -->
+    <dimen name="floating_min_button_width">60dp</dimen>
+    <dimen name="floating_min_process_dialog_width">320dp</dimen>  <!-- 进程选择Dialog最小宽度，缩小25% -->
+</resources>

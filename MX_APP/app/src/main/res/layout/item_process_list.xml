@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/floating_spacing_sm">
+
+    <!-- App Icon -->
+    <ImageView
+        android:id="@+id/process_icon"
+        android:layout_width="@dimen/floating_icon_lg"
+        android:layout_height="@dimen/floating_icon_lg"
+        android:layout_marginEnd="8dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/ic_launcher" />
+
+    <!-- PID -->
+    <TextView
+        android:id="@+id/process_details"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:paddingEnd="@dimen/floating_spacing_xs"
+        android:text="@string/placeholder_pid"
+        android:textColor="#00BCD4"
+        android:textSize="@dimen/floating_text_caption"
+        android:textStyle="bold" />
+
+    <!-- Process Name -->
+    <TextView
+        android:id="@+id/process_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:ellipsize="end"
+        android:maxLength="24"
+        android:maxLines="1"
+        android:paddingEnd="@dimen/floating_spacing_xs"
+        android:text="@string/placeholder_process_name"
+        android:textColor="#FFFFFF"
+        android:textSize="@dimen/floating_text_body" />
+
+    <!-- Memory Usage -->
+    <TextView
+        android:id="@+id/process_rss"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#1AFF9800"
+        android:paddingStart="@dimen/floating_spacing_xs"
+        android:paddingEnd="@dimen/floating_spacing_xs"
+        android:text="@string/placeholder_memory_size"
+        android:textColor="#FF9800"
+        android:textSize="@dimen/floating_text_small" />
+
+</LinearLayout>

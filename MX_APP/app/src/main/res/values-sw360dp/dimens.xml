@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 悬浮图标大小 - 为小屏高密度设备优化 -->
+    <dimen name="overlay_icon_size">52dp</dimen>
+</resources>

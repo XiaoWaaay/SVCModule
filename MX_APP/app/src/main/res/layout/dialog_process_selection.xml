@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<moe.fuqiuluo.mamu.widget.FixedLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dialog_background"
+    android:elevation="@dimen/floating_elevation_dialog"
+    android:orientation="vertical"
+    app:maxHeightPercent="0.8"
+    app:maxWidthPercent="0.8">
+
+    <!-- Title栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/floating_spacing_lg"
+        android:paddingBottom="@dimen/floating_spacing_md">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/dialog_title"
+            style="@style/FloatingText.H1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/settings_select_process" />
+
+    </LinearLayout>
+
+    <!-- 分隔线 -->
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/floating_spacing_lg"
+        app:dividerColor="@color/floating_divider" />
+
+    <!-- 进程列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/process_list"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fadeScrollbars="false"
+        android:paddingTop="@dimen/floating_spacing_sm"
+        android:paddingBottom="@dimen/floating_spacing_sm"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbars="vertical"
+        android:minWidth="@dimen/floating_min_process_dialog_width"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    <!-- 分隔线 -->
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/floating_spacing_lg"
+        app:dividerColor="@color/floating_divider" />
+
+    <!-- 按钮区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:padding="@dimen/floating_spacing_md">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel"
+            style="@style/FloatingButton.Text.White"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/floating_min_button_width"
+            android:text="@string/button_cancel" />
+
+    </LinearLayout>
+
+</moe.fuqiuluo.mamu.widget.FixedLinearLayout>

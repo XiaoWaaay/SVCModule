@@ -1,0 +1,9 @@
+[package]
+name = "jni-macro-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+inventory = "0.3"
+jni = "0.21"
+log = "0.4"

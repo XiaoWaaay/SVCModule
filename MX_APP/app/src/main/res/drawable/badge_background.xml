@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Badge background - small circular indicator -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <!-- Badge color - red for visibility -->
+    <solid android:color="#F44336" />
+
+    <!-- Minimum size to ensure circular shape -->
+    <size
+        android:width="16dp"
+        android:height="16dp" />
+
+</shape>
