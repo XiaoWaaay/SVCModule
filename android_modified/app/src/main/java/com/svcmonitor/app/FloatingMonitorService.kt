@@ -750,8 +750,12 @@ class FloatingMonitorService : Service() {
                 if (parsed.consumedBytes in 1 until merged.size) {
                     tail = merged.copyOfRange(parsed.consumedBytes, merged.size)
                     offset += parsed.consumedBytes
-                } else {
+                } else if (parsed.consumedBytes == merged.size) {
                     tail = ByteArray(0)
+                    offset += chunk.size
+                } else {
+                    // Keep trailing bytes when parser cannot fully consume current chunk
+                    tail = merged
                     offset += chunk.size
                 }
                 if (chunk.size < chunkSize) break
@@ -763,32 +767,32 @@ class FloatingMonitorService : Service() {
     private fun exportEventsToCsv() {
         scope.launch {
             Toast.makeText(this@FloatingMonitorService, "Reading all events...", Toast.LENGTH_SHORT).show()
-            val allEvents = readAllEventsStreaming()
-            if (allEvents.isEmpty()) {
-                Toast.makeText(this@FloatingMonitorService, "No events to export (binary file empty)", Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-            val tempFile = File(cacheDir, "svc_export_${System.currentTimeMillis()}.csv")
-            withContext(Dispatchers.IO) {
-                BufferedWriter(FileWriter(tempFile)).use { w ->
-                    w.write("seq,nr,name,tgid,pid,uid,comm,pc,caller,fp,sp,bt,clone_fn,ret,a0,a1,a2,a3,a4,a5,desc")
-                    w.newLine()
-                    for (e in allEvents) {
-                        val bt = e.bt.joinToString("|")
-                        val desc = e.desc.replace("\"", "\"\"")
-                        w.write("${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},${e.comm},${e.pc},${e.caller},${e.fp},${e.sp},\"$bt\",${e.cloneFn},${e.ret},${e.a0},${e.a1},${e.a2},${e.a3},${e.a4},${e.a5},\"$desc\"")
+            runCatching {
+                val allEvents = readAllEventsStreaming()
+                if (allEvents.isEmpty()) throw IllegalStateException("No events to export (binary file empty)")
+                val exportDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
+                val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.csv")
+                withContext(Dispatchers.IO) {
+                    BufferedWriter(FileWriter(outFile)).use { w ->
+                        w.write("seq,nr,name,tgid,pid,uid,comm,pc,caller,fp,sp,bt,clone_fn,ret,a0,a1,a2,a3,a4,a5,desc")
                         w.newLine()
+                        for (e in allEvents) {
+                            val bt = e.bt.joinToString("|")
+                            val desc = e.desc.replace("\"", "\"\"")
+                            val comm = e.comm.replace("\"", "\"\"")
+                            w.write("${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$comm\",${e.pc},${e.caller},${e.fp},${e.sp},\"$bt\",${e.cloneFn},${e.ret},${e.a0},${e.a1},${e.a2},${e.a3},${e.a4},${e.a5},\"$desc\"")
+                            w.newLine()
+                        }
                     }
                 }
-            }
-            val targetPath = "/data/local/tmp/${tempFile.name}"
-            val success = withContext(Dispatchers.IO) {
-                runCatching { Runtime.getRuntime().exec(arrayOf("su", "-c", "cp ${tempFile.absolutePath} $targetPath")).waitFor() }.getOrDefault(-1) == 0
-            }
-            val finalPath = if (success) targetPath else tempFile.absolutePath
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@FloatingMonitorService, "CSV exported: ${allEvents.size} events to $finalPath", Toast.LENGTH_LONG).show()
-                shareExportFile(File(finalPath), "text/csv")
+                outFile to allEvents.size
+            }.onSuccess { (file, count) ->
+                logLine("Floating CSV exported: $count events -> ${file.absolutePath}")
+                Toast.makeText(this@FloatingMonitorService, "CSV exported: $count events", Toast.LENGTH_LONG).show()
+                shareExportFile(file, "text/csv")
+            }.onFailure { e ->
+                logLine("Floating CSV export failed: ${e.message}")
+                Toast.makeText(this@FloatingMonitorService, "CSV export failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -796,33 +800,32 @@ class FloatingMonitorService : Service() {
     private fun exportEventsToJsonl() {
         scope.launch {
             Toast.makeText(this@FloatingMonitorService, "Reading all events...", Toast.LENGTH_SHORT).show()
-            val allEvents = readAllEventsStreaming()
-            if (allEvents.isEmpty()) {
-                Toast.makeText(this@FloatingMonitorService, "No events to export (binary file empty)", Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-            val tempFile = File(cacheDir, "svc_export_${System.currentTimeMillis()}.jsonl")
-            withContext(Dispatchers.IO) {
-                BufferedWriter(FileWriter(tempFile)).use { w ->
-                    for (e in allEvents) {
-                        val obj = JSONObject().apply {
-                            put("seq", e.seq); put("nr", e.nr); put("name", e.name); put("tgid", e.tgid); put("pid", e.pid); put("uid", e.uid)
-                            put("comm", e.comm); put("pc", e.pc); put("caller", e.caller); put("fp", e.fp); put("sp", e.sp); put("bt", JSONArray(e.bt))
-                            put("clone_fn", e.cloneFn); put("ret", e.ret); put("a0", e.a0); put("a1", e.a1); put("a2", e.a2); put("a3", e.a3); put("a4", e.a4); put("a5", e.a5); put("desc", e.desc)
+            runCatching {
+                val allEvents = readAllEventsStreaming()
+                if (allEvents.isEmpty()) throw IllegalStateException("No events to export (binary file empty)")
+                val exportDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
+                val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.jsonl")
+                withContext(Dispatchers.IO) {
+                    BufferedWriter(FileWriter(outFile)).use { w ->
+                        for (e in allEvents) {
+                            val obj = JSONObject().apply {
+                                put("seq", e.seq); put("nr", e.nr); put("name", e.name); put("tgid", e.tgid); put("pid", e.pid); put("uid", e.uid)
+                                put("comm", e.comm); put("pc", e.pc); put("caller", e.caller); put("fp", e.fp); put("sp", e.sp); put("bt", JSONArray(e.bt))
+                                put("clone_fn", e.cloneFn); put("ret", e.ret); put("a0", e.a0); put("a1", e.a1); put("a2", e.a2); put("a3", e.a3); put("a4", e.a4); put("a5", e.a5); put("desc", e.desc)
+                            }
+                            w.write(obj.toString())
+                            w.newLine()
                         }
-                        w.write(obj.toString())
-                        w.newLine()
                     }
                 }
-            }
-            val targetPath = "/data/local/tmp/${tempFile.name}"
-            val success = withContext(Dispatchers.IO) {
-                runCatching { Runtime.getRuntime().exec(arrayOf("su", "-c", "cp ${tempFile.absolutePath} $targetPath")).waitFor() }.getOrDefault(-1) == 0
-            }
-            val finalPath = if (success) targetPath else tempFile.absolutePath
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@FloatingMonitorService, "JSONL exported: ${allEvents.size} events to $finalPath", Toast.LENGTH_LONG).show()
-                shareExportFile(File(finalPath), "application/x-ndjson")
+                outFile to allEvents.size
+            }.onSuccess { (file, count) ->
+                logLine("Floating JSONL exported: $count events -> ${file.absolutePath}")
+                Toast.makeText(this@FloatingMonitorService, "JSONL exported: $count events", Toast.LENGTH_LONG).show()
+                shareExportFile(file, "application/x-ndjson")
+            }.onFailure { e ->
+                logLine("Floating JSONL export failed: ${e.message}")
+                Toast.makeText(this@FloatingMonitorService, "JSONL export failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

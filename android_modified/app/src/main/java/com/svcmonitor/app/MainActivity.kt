@@ -2307,76 +2307,96 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun exportCsv() {
-        val events = vm.events.value ?: emptyList()
-        if (events.isEmpty()) {
-            tvMsg.text = "Tip: No events to export"
-            return
-        }
         lifecycleScope.launch {
-            val file = withContext(Dispatchers.IO) {
-                val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                val f = File(getExternalFilesDir(null), "svc_events_resolved_$ts.csv")
-                f.bufferedWriter().use { w ->
-                    w.write("seq,nr,name,tgid,pid,uid,comm,pc_resolved,caller_resolved,bt_resolved,desc")
-                    w.newLine()
-                    for (e in events) {
-                        val resolved = resolveEventFields(e)
-                        w.write("${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},${e.comm},")
-                        w.write("\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",")
-                        w.write("\"${e.desc.replace("\"", "\"\"")}\"")
-                        w.newLine()
-                    }
-                }
-                f
+            tvMsg.text = "Tip: Exporting CSV in background..."
+            runCatching {
+                val file = exportAllEventsCsvResolved()
+                shareFile(file, "text/csv")
+                tvMsg.text = "Tip: CSV exported (all events, resolved)"
+            }.onFailure { e ->
+                tvMsg.text = "Tip: CSV export failed: ${e.message}"
             }
-            shareFile(file, "text/csv")
-            tvMsg.text = "Tip: CSV exported (with resolved addresses)"
         }
     }
 
     private fun exportJson() {
-        val events = vm.events.value ?: emptyList()
-        if (events.isEmpty()) {
-            tvMsg.text = "Tip: No events to export"
-            return
-        }
         lifecycleScope.launch {
-            val file = withContext(Dispatchers.IO) {
-                val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                val f = File(getExternalFilesDir(null), "svc_events_resolved_$ts.json")
-                val arr = JSONArray()
-                for (e in events) {
-                    val resolved = resolveEventFields(e)
-                    val obj = JSONObject().apply {
-                        put("seq", e.seq)
-                        put("nr", e.nr)
-                        put("name", e.name)
-                        put("tgid", e.tgid)
-                        put("pid", e.pid)
-                        put("uid", e.uid)
-                        put("comm", e.comm)
-                        put("pc", e.pc)
-                        put("pc_resolved", resolved["pc"])
-                        put("caller", e.caller)
-                        put("caller_resolved", resolved["caller"])
-                        put("fp", e.fp)
-                        put("sp", e.sp)
-                        put("bt", JSONArray(e.bt))
-                        put("bt_resolved", resolved["bt"])
-                        put("clone_fn", e.cloneFn)
-                        put("ret", e.ret)
-                        put("a0", e.a0); put("a1", e.a1); put("a2", e.a2)
-                        put("a3", e.a3); put("a4", e.a4); put("a5", e.a5)
-                        put("desc", e.desc)
-                    }
-                    arr.put(obj)
-                }
-                f.writeText(arr.toString(2))
-                f
+            tvMsg.text = "Tip: Exporting JSONL in background..."
+            runCatching {
+                val file = exportAllEventsJsonlResolved()
+                shareFile(file, "application/x-ndjson")
+                tvMsg.text = "Tip: JSONL exported (all events, resolved)"
+            }.onFailure { e ->
+                tvMsg.text = "Tip: JSONL export failed: ${e.message}"
             }
-            shareFile(file, "application/json")
-            tvMsg.text = "Tip: JSON exported (with resolved addresses)"
         }
+    }
+
+    private suspend fun exportAllEventsCsvResolved(): File = withContext(Dispatchers.IO) {
+        val dao = SvcEventDb.get(applicationContext).dao()
+        val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val outDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
+        val outFile = File(outDir, "svc_events_resolved_$ts.csv")
+        var cursor = 0L
+        var wroteAny = false
+        outFile.bufferedWriter().use { w ->
+            w.write("seq,nr,name,tgid,pid,uid,comm,pc_resolved,caller_resolved,bt_resolved,desc")
+            w.newLine()
+            while (true) {
+                val chunk = dao.afterSeq(cursor, 1000)
+                if (chunk.isEmpty()) break
+                for (entity in chunk) {
+                    val line = entityToCsvResolved(entity)
+                    w.write(line)
+                    w.newLine()
+                    cursor = entity.seq
+                    wroteAny = true
+                }
+                w.flush()
+            }
+        }
+        if (!wroteAny) throw IllegalStateException("No events available for export")
+        outFile
+    }
+
+    private suspend fun exportAllEventsJsonlResolved(): File = withContext(Dispatchers.IO) {
+        val dao = SvcEventDb.get(applicationContext).dao()
+        val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val outDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
+        val outFile = File(outDir, "svc_events_resolved_$ts.jsonl")
+        var cursor = 0L
+        var wroteAny = false
+        outFile.bufferedWriter().use { w ->
+            while (true) {
+                val chunk = dao.afterSeq(cursor, 1000)
+                if (chunk.isEmpty()) break
+                for (entity in chunk) {
+                    w.write(entityToJsonLineWithResolved(entity))
+                    cursor = entity.seq
+                    wroteAny = true
+                }
+                w.flush()
+            }
+        }
+        if (!wroteAny) throw IllegalStateException("No events available for export")
+        outFile
+    }
+
+    private suspend fun entityToCsvResolved(e: SvcEventEntity): String {
+        val resolved = resolveEventFields(
+            StatusParser.SvcEvent(
+                seq = e.seq, nr = e.nr, name = e.name,
+                tgid = e.tgid, pid = e.pid, uid = e.uid, comm = e.comm,
+                pc = e.pc, caller = e.caller, fp = e.fp, sp = e.sp,
+                bt = if (e.bt.isBlank()) emptyList() else e.bt.split("|").mapNotNull { it.toLongOrNull(16) },
+                cloneFn = e.cloneFn, ret = e.ret,
+                a0 = e.a0, a1 = e.a1, a2 = e.a2, a3 = e.a3, a4 = e.a4, a5 = e.a5,
+                desc = e.desc
+            )
+        )
+        val descEscaped = e.desc.replace("\"", "\"\"")
+        val commEscaped = e.comm.replace("\"", "\"\"")
+        return "${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$commEscaped\",\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",\"$descEscaped\""
     }
 
     private fun shareFile(file: File, mimeType: String) {

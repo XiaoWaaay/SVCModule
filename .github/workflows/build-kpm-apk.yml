@@ -1,4 +1,4 @@
-name: Build KPM + Android APK
+name: Build KPM + Android APKs
 
 on:
   pull_request:
@@ -42,7 +42,7 @@ jobs:
             "build-tools;34.0.0" \
             "ndk;${NDK_VERSION}"
 
-      - name: Build KPM + APK
+      - name: Build KPM + APK (android)
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
@@ -50,6 +50,13 @@ jobs:
           GRADLE_VERSION: ${{ env.GRADLE_VERSION }}
         run: |
           ./scripts/ci/build_kpm_and_apk.sh
+
+      - name: Build APK (android_modified)
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        run: |
+          gradle -p android_modified :app:assembleDebug --no-daemon -Dkotlin.daemon.enabled=false
 
       - name: Upload KPM artifact
         uses: actions/upload-artifact@v4
@@ -62,3 +69,9 @@ jobs:
         with:
           name: svc-monitor-apk-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload APK artifact (android_modified)
+        uses: actions/upload-artifact@v4
+        with:
+          name: svc-monitor-apk-modified-debug
+          path: android_modified/app/build/outputs/apk/debug/app-debug.apk
