@@ -14,36 +14,27 @@ object ExportEventFormatter {
         return mapOf("pc" to pcRes, "caller" to callerRes, "bt" to btRes)
     }
 
-    /**
-     * Requested by user: swap displayed/exported pid/tgid fields.
-     * - exported_tgid <- event.pid
-     * - exported_pid  <- event.tgid
-     */
-    private fun swappedIds(e: StatusParser.SvcEvent): Pair<Int, Int> = e.pid to e.tgid
-
     fun csvHeader(): String {
         return "seq,nr,name,tgid,pid,uid,comm,pc_resolved,caller_resolved,bt_resolved,maps_snapshots,desc"
     }
 
     suspend fun toCsvLine(e: StatusParser.SvcEvent): String {
         val resolved = resolveEventFields(e)
-        val (tgidOut, pidOut) = swappedIds(e)
         val comm = e.comm.replace("\"", "\"\"")
         val desc = e.desc.replace("\"", "\"\"")
         val maps = AddressResolver.getRecentSnapshotSummaries(e.tgid, 5).joinToString(" || ").replace("\"", "\"\"")
-        return "${e.seq},${e.nr},${e.name},$tgidOut,$pidOut,${e.uid},\"$comm\",\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",\"$maps\",\"$desc\""
+        return "${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$comm\",\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",\"$maps\",\"$desc\""
     }
 
     suspend fun toJsonObject(e: StatusParser.SvcEvent): JSONObject {
         val resolved = resolveEventFields(e)
-        val (tgidOut, pidOut) = swappedIds(e)
         val snapshots = AddressResolver.getRecentSnapshotSummaries(e.tgid, 5)
         return JSONObject().apply {
             put("seq", e.seq)
             put("nr", e.nr)
             put("name", e.name)
-            put("tgid", tgidOut)
-            put("pid", pidOut)
+            put("tgid", e.tgid)
+            put("pid", e.pid)
             put("uid", e.uid)
             put("comm", e.comm)
             put("pc", e.pc)
