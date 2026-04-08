@@ -28,6 +28,9 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
+import com.svcmonitor.app.db.SvcEventDb
+import com.svcmonitor.app.db.SvcEventEntity
+import com.svcmonitor.app.db.toEntity
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -667,6 +670,15 @@ class FloatingMonitorService : Service() {
 
     private fun pushEvents(events: List<StatusParser.SvcEvent>) {
         if (events.isEmpty()) return
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                val nowNs = System.currentTimeMillis() * 1_000_000L
+                val entities = events.map { it.toEntity("", nowNs) }
+                SvcEventDb.get(applicationContext).dao().upsertAll(entities)
+            }.onFailure {
+                logLine("DB upsert failed in floating mode: ${it.message}")
+            }
+        }
         for (e in events) { while (eventBuffer.size >= 500) eventBuffer.removeFirst(); eventBuffer.addLast(e) }
         renderLogs()
         renderEventList()
@@ -766,26 +778,34 @@ class FloatingMonitorService : Service() {
 
     private fun exportEventsToCsv() {
         scope.launch {
-            Toast.makeText(this@FloatingMonitorService, "Reading all events...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@FloatingMonitorService, "Exporting CSV from DB snapshot...", Toast.LENGTH_SHORT).show()
             runCatching {
-                val allEvents = readAllEventsStreaming()
-                if (allEvents.isEmpty()) throw IllegalStateException("No events to export (binary file empty)")
+                val dao = SvcEventDb.get(applicationContext).dao()
+                val maxSeq = dao.latest(1).firstOrNull()?.seq ?: throw IllegalStateException("No events to export")
                 val exportDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
                 val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.csv")
-                withContext(Dispatchers.IO) {
+                val count = withContext(Dispatchers.IO) {
                     BufferedWriter(FileWriter(outFile)).use { w ->
                         w.write("seq,nr,name,tgid,pid,uid,comm,pc,caller,fp,sp,bt,clone_fn,ret,a0,a1,a2,a3,a4,a5,desc")
                         w.newLine()
-                        for (e in allEvents) {
-                            val bt = e.bt.joinToString("|")
-                            val desc = e.desc.replace("\"", "\"\"")
-                            val comm = e.comm.replace("\"", "\"\"")
-                            w.write("${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$comm\",${e.pc},${e.caller},${e.fp},${e.sp},\"$bt\",${e.cloneFn},${e.ret},${e.a0},${e.a1},${e.a2},${e.a3},${e.a4},${e.a5},\"$desc\"")
-                            w.newLine()
+                        var cursor = 0L
+                        var count = 0
+                        while (cursor < maxSeq) {
+                            val chunk = dao.afterSeq(cursor, 1000).filter { it.seq <= maxSeq }
+                            if (chunk.isEmpty()) break
+                            for (e in chunk) {
+                                w.write(entityToCsvLine(e))
+                                w.newLine()
+                                cursor = e.seq
+                                count++
+                            }
+                            w.flush()
                         }
+                        if (count == 0) throw IllegalStateException("No events in DB snapshot")
+                        count
                     }
                 }
-                outFile to allEvents.size
+                outFile to count
             }.onSuccess { (file, count) ->
                 logLine("Floating CSV exported: $count events -> ${file.absolutePath}")
                 Toast.makeText(this@FloatingMonitorService, "CSV exported: $count events", Toast.LENGTH_LONG).show()
@@ -799,26 +819,32 @@ class FloatingMonitorService : Service() {
 
     private fun exportEventsToJsonl() {
         scope.launch {
-            Toast.makeText(this@FloatingMonitorService, "Reading all events...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@FloatingMonitorService, "Exporting JSONL from DB snapshot...", Toast.LENGTH_SHORT).show()
             runCatching {
-                val allEvents = readAllEventsStreaming()
-                if (allEvents.isEmpty()) throw IllegalStateException("No events to export (binary file empty)")
+                val dao = SvcEventDb.get(applicationContext).dao()
+                val maxSeq = dao.latest(1).firstOrNull()?.seq ?: throw IllegalStateException("No events to export")
                 val exportDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
                 val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.jsonl")
-                withContext(Dispatchers.IO) {
+                val count = withContext(Dispatchers.IO) {
                     BufferedWriter(FileWriter(outFile)).use { w ->
-                        for (e in allEvents) {
-                            val obj = JSONObject().apply {
-                                put("seq", e.seq); put("nr", e.nr); put("name", e.name); put("tgid", e.tgid); put("pid", e.pid); put("uid", e.uid)
-                                put("comm", e.comm); put("pc", e.pc); put("caller", e.caller); put("fp", e.fp); put("sp", e.sp); put("bt", JSONArray(e.bt))
-                                put("clone_fn", e.cloneFn); put("ret", e.ret); put("a0", e.a0); put("a1", e.a1); put("a2", e.a2); put("a3", e.a3); put("a4", e.a4); put("a5", e.a5); put("desc", e.desc)
+                        var cursor = 0L
+                        var count = 0
+                        while (cursor < maxSeq) {
+                            val chunk = dao.afterSeq(cursor, 1000).filter { it.seq <= maxSeq }
+                            if (chunk.isEmpty()) break
+                            for (e in chunk) {
+                                w.write(entityToJsonlLine(e))
+                                w.newLine()
+                                cursor = e.seq
+                                count++
                             }
-                            w.write(obj.toString())
-                            w.newLine()
+                            w.flush()
                         }
+                        if (count == 0) throw IllegalStateException("No events in DB snapshot")
+                        count
                     }
                 }
-                outFile to allEvents.size
+                outFile to count
             }.onSuccess { (file, count) ->
                 logLine("Floating JSONL exported: $count events -> ${file.absolutePath}")
                 Toast.makeText(this@FloatingMonitorService, "JSONL exported: $count events", Toast.LENGTH_LONG).show()
@@ -828,6 +854,24 @@ class FloatingMonitorService : Service() {
                 Toast.makeText(this@FloatingMonitorService, "JSONL export failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun entityToCsvLine(e: SvcEventEntity): String {
+        val bt = e.bt
+        val desc = e.desc.replace("\"", "\"\"")
+        val comm = e.comm.replace("\"", "\"\"")
+        return "${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$comm\",${e.pc},${e.caller},${e.fp},${e.sp},\"$bt\",${e.cloneFn},${e.ret},${e.a0},${e.a1},${e.a2},${e.a3},${e.a4},${e.a5},\"$desc\""
+    }
+
+    private fun entityToJsonlLine(e: SvcEventEntity): String {
+        val btList = if (e.bt.isBlank()) emptyList() else e.bt.split("|").mapNotNull { it.toLongOrNull(16) }
+        val obj = JSONObject().apply {
+            put("seq", e.seq); put("nr", e.nr); put("name", e.name); put("tgid", e.tgid); put("pid", e.pid); put("uid", e.uid)
+            put("comm", e.comm); put("pc", e.pc); put("caller", e.caller); put("fp", e.fp); put("sp", e.sp); put("bt", JSONArray(btList))
+            put("clone_fn", e.cloneFn); put("ret", e.ret); put("a0", e.a0); put("a1", e.a1); put("a2", e.a2); put("a3", e.a3); put("a4", e.a4); put("a5", e.a5); put("desc", e.desc)
+            if (e.fpChain.isNotBlank()) put("fp_chain", e.fpChain)
+        }
+        return obj.toString()
     }
 
     private fun shareExportFile(file: File, mimeType: String) {

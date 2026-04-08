@@ -2334,16 +2334,17 @@ class MainActivity : AppCompatActivity() {
 
     private suspend fun exportAllEventsCsvResolved(): File = withContext(Dispatchers.IO) {
         val dao = SvcEventDb.get(applicationContext).dao()
+        val maxSeq = dao.latest(1).firstOrNull()?.seq ?: throw IllegalStateException("No events available for export")
         val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val outDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
         val outFile = File(outDir, "svc_events_resolved_$ts.csv")
         var cursor = 0L
         var wroteAny = false
         outFile.bufferedWriter().use { w ->
-            w.write("seq,nr,name,tgid,pid,uid,comm,pc_resolved,caller_resolved,bt_resolved,desc")
+            w.write("seq,nr,name,tgid,pid,uid,comm,pc,pc_resolved,caller,caller_resolved,fp,sp,bt,bt_resolved,clone_fn,ret,a0,a1,a2,a3,a4,a5,desc")
             w.newLine()
-            while (true) {
-                val chunk = dao.afterSeq(cursor, 1000)
+            while (cursor < maxSeq) {
+                val chunk = dao.afterSeq(cursor, 1000).filter { it.seq <= maxSeq }
                 if (chunk.isEmpty()) break
                 for (entity in chunk) {
                     val line = entityToCsvResolved(entity)
@@ -2361,14 +2362,15 @@ class MainActivity : AppCompatActivity() {
 
     private suspend fun exportAllEventsJsonlResolved(): File = withContext(Dispatchers.IO) {
         val dao = SvcEventDb.get(applicationContext).dao()
+        val maxSeq = dao.latest(1).firstOrNull()?.seq ?: throw IllegalStateException("No events available for export")
         val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val outDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
         val outFile = File(outDir, "svc_events_resolved_$ts.jsonl")
         var cursor = 0L
         var wroteAny = false
         outFile.bufferedWriter().use { w ->
-            while (true) {
-                val chunk = dao.afterSeq(cursor, 1000)
+            while (cursor < maxSeq) {
+                val chunk = dao.afterSeq(cursor, 1000).filter { it.seq <= maxSeq }
                 if (chunk.isEmpty()) break
                 for (entity in chunk) {
                     w.write(entityToJsonLineWithResolved(entity))
@@ -2396,7 +2398,8 @@ class MainActivity : AppCompatActivity() {
         )
         val descEscaped = e.desc.replace("\"", "\"\"")
         val commEscaped = e.comm.replace("\"", "\"\"")
-        return "${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$commEscaped\",\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",\"$descEscaped\""
+        val btRaw = e.bt.replace("\"", "\"\"")
+        return "${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$commEscaped\",${e.pc},\"${resolved["pc"]}\",${e.caller},\"${resolved["caller"]}\",${e.fp},${e.sp},\"$btRaw\",\"${resolved["bt"]}\",${e.cloneFn},${e.ret},${e.a0},${e.a1},${e.a2},${e.a3},${e.a4},${e.a5},\"$descEscaped\""
     }
 
     private fun shareFile(file: File, mimeType: String) {
