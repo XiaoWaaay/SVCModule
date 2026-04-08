@@ -2307,49 +2307,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun exportCsv() {
-        val events = vm.events.value ?: emptyList()
-        if (events.isEmpty()) {
-            tvMsg.text = "Tip: No events to export"
-            return
-        }
         lifecycleScope.launch {
-            val file = withContext(Dispatchers.IO) {
-                val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                val f = File(getExternalFilesDir(null), "svc_events_resolved_$ts.csv")
-                f.bufferedWriter().use { w ->
-                    w.write(ExportEventFormatter.csvHeader())
-                    w.newLine()
-                    for (e in events) {
-                        w.write(ExportEventFormatter.toCsvLine(e))
-                        w.newLine()
-                    }
-                }
-                f
+            runCatching {
+                val result = FullLogExporter.exportCsv(this@MainActivity)
+                shareFile(result.file, "text/csv")
+                tvMsg.text = "Tip: CSV exported (${result.count} events)"
+            }.onFailure { e ->
+                tvMsg.text = "Tip: CSV export failed: ${e.message}"
             }
-            shareFile(file, "text/csv")
-            tvMsg.text = "Tip: CSV exported (with resolved addresses)"
         }
     }
 
     private fun exportJson() {
-        val events = vm.events.value ?: emptyList()
-        if (events.isEmpty()) {
-            tvMsg.text = "Tip: No events to export"
-            return
-        }
         lifecycleScope.launch {
-            val file = withContext(Dispatchers.IO) {
-                val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                val f = File(getExternalFilesDir(null), "svc_events_resolved_$ts.json")
-                val arr = JSONArray()
-                for (e in events) {
-                    arr.put(ExportEventFormatter.toJsonObject(e))
-                }
-                f.writeText(arr.toString(2))
-                f
+            runCatching {
+                val result = FullLogExporter.exportJsonl(this@MainActivity)
+                shareFile(result.file, "application/x-ndjson")
+                tvMsg.text = "Tip: JSONL exported (${result.count} events)"
+            }.onFailure { e ->
+                tvMsg.text = "Tip: JSONL export failed: ${e.message}"
             }
-            shareFile(file, "application/json")
-            tvMsg.text = "Tip: JSON exported (with resolved addresses)"
         }
     }
 

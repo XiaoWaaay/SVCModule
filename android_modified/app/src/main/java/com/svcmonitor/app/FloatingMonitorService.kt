@@ -29,9 +29,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.*
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -764,33 +762,12 @@ class FloatingMonitorService : Service() {
 
     private fun exportEventsToCsv() {
         scope.launch {
-            val events = eventBuffer.toList()
-            if (events.isEmpty()) {
-                Toast.makeText(this@FloatingMonitorService, "No events to export", Toast.LENGTH_SHORT).show()
-                return@launch
-            }
             runCatching {
                 Toast.makeText(this@FloatingMonitorService, "Exporting CSV...", Toast.LENGTH_SHORT).show()
-                val exportDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
-                val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.csv")
-                val count = withContext(Dispatchers.IO) {
-                    BufferedWriter(FileWriter(outFile)).use { w ->
-                        w.write(ExportEventFormatter.csvHeader())
-                        w.newLine()
-                        var count = 0
-                        for (e in events) {
-                            w.write(ExportEventFormatter.toCsvLine(e))
-                            w.newLine()
-                            count++
-                        }
-                        count
-                    }
-                }
-                outFile to count
-            }.onSuccess { (file, count) ->
-                logLine("Floating CSV exported: $count events -> ${file.absolutePath}")
-                Toast.makeText(this@FloatingMonitorService, "CSV exported: $count events", Toast.LENGTH_LONG).show()
-                shareExportFile(file, "text/csv")
+                val result = FullLogExporter.exportCsv(this@FloatingMonitorService)
+                logLine("Floating CSV exported: ${result.count} events -> ${result.file.absolutePath}")
+                Toast.makeText(this@FloatingMonitorService, "CSV exported: ${result.count} events", Toast.LENGTH_LONG).show()
+                shareExportFile(result.file, "text/csv")
             }.onFailure { e ->
                 logLine("Floating CSV export failed: ${e.message}")
                 Toast.makeText(this@FloatingMonitorService, "CSV export failed: ${e.message}", Toast.LENGTH_LONG).show()
@@ -800,31 +777,12 @@ class FloatingMonitorService : Service() {
 
     private fun exportEventsToJsonl() {
         scope.launch {
-            val events = eventBuffer.toList()
-            if (events.isEmpty()) {
-                Toast.makeText(this@FloatingMonitorService, "No events to export", Toast.LENGTH_SHORT).show()
-                return@launch
-            }
             runCatching {
                 Toast.makeText(this@FloatingMonitorService, "Exporting JSONL...", Toast.LENGTH_SHORT).show()
-                val exportDir = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
-                val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.jsonl")
-                val count = withContext(Dispatchers.IO) {
-                    BufferedWriter(FileWriter(outFile)).use { w ->
-                        var count = 0
-                        for (e in events) {
-                            w.write(ExportEventFormatter.toJsonObject(e).toString())
-                            w.newLine()
-                            count++
-                        }
-                        count
-                    }
-                }
-                outFile to count
-            }.onSuccess { (file, count) ->
-                logLine("Floating JSONL exported: $count events -> ${file.absolutePath}")
-                Toast.makeText(this@FloatingMonitorService, "JSONL exported: $count events", Toast.LENGTH_LONG).show()
-                shareExportFile(file, "application/x-ndjson")
+                val result = FullLogExporter.exportJsonl(this@FloatingMonitorService)
+                logLine("Floating JSONL exported: ${result.count} events -> ${result.file.absolutePath}")
+                Toast.makeText(this@FloatingMonitorService, "JSONL exported: ${result.count} events", Toast.LENGTH_LONG).show()
+                shareExportFile(result.file, "application/x-ndjson")
             }.onFailure { e ->
                 logLine("Floating JSONL export failed: ${e.message}")
                 Toast.makeText(this@FloatingMonitorService, "JSONL export failed: ${e.message}", Toast.LENGTH_LONG).show()
