@@ -4,10 +4,7 @@ import android.content.Intent
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.Typeface
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.text.Editable
 import android.text.SpannableString
 import android.text.Spanned
@@ -345,106 +342,8 @@ class MainActivity : AppCompatActivity() {
             addView(btnStartStop)
         })
 
-        col.addView(makeCard {
-            addView(makeLabel("Default connection settings (Main page)"))
-
-            val rowRelay = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
-            val etHost = EditText(this@MainActivity).apply {
-                hint = "WebSocket/PC host"
-                setText(relayHost)
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val etPort = EditText(this@MainActivity).apply {
-                hint = "Port"
-                inputType = android.text.InputType.TYPE_CLASS_NUMBER
-                setText(relayPort.toString())
-                layoutParams = LinearLayout.LayoutParams(dp(96), ViewGroup.LayoutParams.WRAP_CONTENT)
-            }
-            rowRelay.addView(etHost)
-            rowRelay.addView(Space(this@MainActivity).apply { layoutParams = LinearLayout.LayoutParams(dp(8), 1) })
-            rowRelay.addView(etPort)
-            addView(rowRelay)
-
-            val rowAdb = LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply { topMargin = dp(6) }
-            }
-            val etAdbPort = EditText(this@MainActivity).apply {
-                hint = "ADB app port"
-                inputType = android.text.InputType.TYPE_CLASS_NUMBER
-                setText(pcServerPort.toString())
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            rowAdb.addView(etAdbPort)
-            addView(rowAdb)
-
-            addView(Button(this@MainActivity).apply {
-                text = "Save defaults"
-                isAllCaps = false
-                setOnClickListener {
-                    relayHost = etHost.text.toString().trim().ifBlank { "127.0.0.1" }
-                    relayPort = etPort.text.toString().toIntOrNull() ?: 5001
-                    pcServerPort = etAdbPort.text.toString().toIntOrNull() ?: 8080
-                    prefs.edit()
-                        .putString("pc_relay_host", relayHost)
-                        .putInt("pc_relay_port", relayPort)
-                        .putInt("pc_server_port", pcServerPort)
-                        .apply()
-                    tvMsg.text = "Tip: Defaults saved. Relay=$relayHost:$relayPort, adb-port=$pcServerPort"
-                }
-            })
-
-            addView(Button(this@MainActivity).apply {
-                text = "Launch floating monitor (MX-like overlay)"
-                isAllCaps = false
-                setOnClickListener { startFloatingMonitorOverlay() }
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply { topMargin = dp(6) }
-            })
-        })
-
         sv.addView(col)
         return sv
-    }
-
-    private fun startFloatingMonitorOverlay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            tryAutoGrantOverlayByRoot()
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            val i = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            startActivity(i)
-            Toast.makeText(this, "Overlay permission is required. Opened settings.", Toast.LENGTH_LONG).show()
-            return
-        }
-        val i = Intent(this, FloatingMonitorService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i) else startService(i)
-        Toast.makeText(this, "Floating monitor started", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun tryAutoGrantOverlayByRoot() {
-        try {
-            Runtime.getRuntime().exec(
-                arrayOf(
-                    "su",
-                    "-c",
-                    "appops set $packageName SYSTEM_ALERT_WINDOW allow; appops set $packageName POST_NOTIFICATION allow"
-                )
-            ).waitFor()
-        } catch (_: Exception) {
-        }
     }
 
     /* ══════════════════════════════════════════════════════════════
