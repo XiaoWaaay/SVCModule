@@ -1,4 +1,0 @@
-<resources>
-    <!-- 悬浮图标大小 -->
-    <dimen name="overlay_icon_size">64dp</dimen>
-</resources>
