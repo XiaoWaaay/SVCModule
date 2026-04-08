@@ -12,11 +12,13 @@ import androidx.room.Index
         Index(value = ["pid"]),
         Index(value = ["nr"]),
         Index(value = ["comm"]),
-        Index(value = ["createdAtNs"])
+        Index(value = ["createdAtNs"]),
+        Index(value = ["seq"])
     ]
 )
 data class SvcEventEntity(
-    @PrimaryKey val seq: Long,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val seq: Long,
     val nr: Int,
     val name: String,
     val tgid: Int,

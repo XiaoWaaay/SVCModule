@@ -189,7 +189,7 @@ class MainViewModel : ViewModel() {
         if (daoLocal != null) {
             withContext(Dispatchers.IO) {
                 val entities = events.map { it.toEntity("", nowNs) }
-                daoLocal.upsertAll(entities)
+                daoLocal.insertAll(entities)
             }
             _newEvents.postValue(events)
             refreshUiFromDb()

@@ -4,6 +4,7 @@ import com.svcmonitor.app.StatusParser
 
 fun StatusParser.SvcEvent.toEntity(fpChain: String, createdAtNs: Long): SvcEventEntity {
     return SvcEventEntity(
+        id = 0,
         seq = seq,
         nr = nr,
         name = name,

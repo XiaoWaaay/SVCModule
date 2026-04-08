@@ -16,23 +16,23 @@ object FullLogExporter {
 
     suspend fun exportCsv(context: Context): ExportResult = withContext(Dispatchers.IO) {
         val dao = SvcEventDb.get(context.applicationContext).dao()
-        val maxSeq = dao.latest(1).firstOrNull()?.seq ?: throw IllegalStateException("No events to export")
+        val maxId = dao.maxId() ?: throw IllegalStateException("No events to export")
         val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val outDir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
         val outFile = File(outDir, "svc_events_resolved_$ts.csv")
-        var cursor = 0L
+        var cursorId = 0L
         var count = 0
         outFile.bufferedWriter().use { w ->
             w.write(ExportEventFormatter.csvHeader())
             w.newLine()
-            while (cursor < maxSeq) {
-                val chunk = dao.afterSeq(cursor, 1000).filter { it.seq <= maxSeq }
+            while (cursorId < maxId) {
+                val chunk = dao.afterId(cursorId, 1000).filter { it.id <= maxId }
                 if (chunk.isEmpty()) break
                 for (entity in chunk) {
                     val e = entity.toSvcEvent()
                     w.write(ExportEventFormatter.toCsvLine(e))
                     w.newLine()
-                    cursor = entity.seq
+                    cursorId = entity.id
                     count++
                 }
                 w.flush()
@@ -44,21 +44,21 @@ object FullLogExporter {
 
     suspend fun exportJsonl(context: Context): ExportResult = withContext(Dispatchers.IO) {
         val dao = SvcEventDb.get(context.applicationContext).dao()
-        val maxSeq = dao.latest(1).firstOrNull()?.seq ?: throw IllegalStateException("No events to export")
+        val maxId = dao.maxId() ?: throw IllegalStateException("No events to export")
         val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val outDir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
         val outFile = File(outDir, "svc_events_resolved_$ts.jsonl")
-        var cursor = 0L
+        var cursorId = 0L
         var count = 0
         outFile.bufferedWriter().use { w ->
-            while (cursor < maxSeq) {
-                val chunk = dao.afterSeq(cursor, 1000).filter { it.seq <= maxSeq }
+            while (cursorId < maxId) {
+                val chunk = dao.afterId(cursorId, 1000).filter { it.id <= maxId }
                 if (chunk.isEmpty()) break
                 for (entity in chunk) {
                     val e = entity.toSvcEvent()
                     w.write(ExportEventFormatter.toJsonObject(e).toString())
                     w.newLine()
-                    cursor = entity.seq
+                    cursorId = entity.id
                     count++
                 }
                 w.flush()

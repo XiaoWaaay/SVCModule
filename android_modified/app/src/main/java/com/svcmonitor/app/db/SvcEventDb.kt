@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [SvcEventEntity::class, SvcEventFtsEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class SvcEventDb : RoomDatabase() {

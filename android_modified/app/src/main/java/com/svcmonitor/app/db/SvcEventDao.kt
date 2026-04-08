@@ -2,7 +2,6 @@ package com.svcmonitor.app.db
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 data class ThreadStat(
@@ -18,17 +17,23 @@ data class ThreadEdge(
 
 @Dao
 interface SvcEventDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(events: List<SvcEventEntity>)
+    @Insert
+    suspend fun insertAll(events: List<SvcEventEntity>)
 
-    @Query("SELECT * FROM events ORDER BY seq DESC LIMIT :limit")
+    @Query("SELECT * FROM events ORDER BY id DESC LIMIT :limit")
     suspend fun latest(limit: Int): List<SvcEventEntity>
 
-    @Query("SELECT * FROM events WHERE pid = :tid ORDER BY seq DESC LIMIT :limit")
+    @Query("SELECT * FROM events WHERE pid = :tid ORDER BY id DESC LIMIT :limit")
     suspend fun byTid(tid: Int, limit: Int): List<SvcEventEntity>
 
-    @Query("SELECT * FROM events WHERE seq > :seq ORDER BY seq ASC LIMIT :limit")
+    @Query("SELECT * FROM events WHERE id > :id ORDER BY id ASC LIMIT :limit")
+    suspend fun afterId(id: Long, limit: Int): List<SvcEventEntity>
+
+    @Query("SELECT * FROM events WHERE seq > :seq ORDER BY id ASC LIMIT :limit")
     suspend fun afterSeq(seq: Long, limit: Int): List<SvcEventEntity>
+
+    @Query("SELECT MAX(id) FROM events")
+    suspend fun maxId(): Long?
 
     @Query(
         """
@@ -63,7 +68,7 @@ interface SvcEventDao {
             CAST(a4 AS TEXT) LIKE '%' || :query || '%' OR
             CAST(a5 AS TEXT) LIKE '%' || :query || '%'
         )
-        ORDER BY seq DESC
+        ORDER BY id DESC
         LIMIT :limit
         """
     )
@@ -91,7 +96,7 @@ interface SvcEventDao {
             CAST(a4 AS TEXT) LIKE '%' || :query || '%' OR
             CAST(a5 AS TEXT) LIKE '%' || :query || '%'
         )
-        ORDER BY seq DESC
+        ORDER BY id DESC
         LIMIT :limit
         """
     )
@@ -105,6 +110,9 @@ interface SvcEventDao {
 
     @Query("UPDATE events SET fpChain = :fpChain WHERE seq = :seq")
     suspend fun updateFpChain(seq: Long, fpChain: String)
+
+    @Query("UPDATE events SET fpChain = :fpChain WHERE id = :id")
+    suspend fun updateFpChainById(id: Long, fpChain: String)
 
     @Query(
         """
@@ -123,7 +131,7 @@ interface SvcEventDao {
         SELECT seq AS seq, pid AS parentPid, ret AS childPid
         FROM events
         WHERE tgid = :tgid AND nr IN (220, 435) AND ret > 0
-        ORDER BY seq ASC
+        ORDER BY id ASC
         LIMIT :limit
         """
     )
