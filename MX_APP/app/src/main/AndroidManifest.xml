@@ -1,61 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Package visibility permission (Android 11+) - automatically granted during setup -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
-
-    <!-- Internet permission for driver download -->
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Floating window permission - must be granted through AppOps -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
-    <!-- Foreground service permission (Android 9+) -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
-        tools:ignore="ForegroundServicesPolicy" />
-
-    <!-- Foreground service type permission (Android 14+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-
-    <!-- Notification permission (Android 13+) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- External storage permissions (Android 12 and below) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"
-        tools:ignore="ScopedStorage" />
-
-    <!-- Media permissions for Android 13+ (API 33+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
-        tools:ignore="PhotoAndVideoPolicy,SelectedPhotoAccess" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
-        tools:ignore="PhotoAndVideoPolicy,SelectedPhotoAccess" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
-    <!-- Manage all files permission (Android 11+) -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
 
     <application
         android:name=".MamuApplication"
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:extractNativeLibs="true"
-        android:largeHeap="true"
         android:theme="@style/Theme.MX">
 
-        <!-- Permission setup entry activity -->
         <activity
-            android:name=".PermissionSetupActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.MX">
             <intent-filter>
@@ -64,20 +24,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Main screen -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MX" />
-
-        <!-- Driver installation screen -->
-        <activity
-            android:name=".DriverInstallActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MX" />
-
-        <!-- Floating overlay service -->
-        <!-- Be careful: using a service can be detected, so the target process should not discover this one via service queries. -->
         <service
             android:name=".service.FloatingWindowService"
             android:enabled="true"
@@ -85,14 +31,8 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Fuqiuluo Floating Service" />
+                android:value="MX Floating UI" />
         </service>
-
-        <!-- Root file-system service -->
-        <service
-            android:name=".service.RootFileSystemService"
-            android:exported="false"
-            tools:ignore="Instantiatable" />
 
     </application>
 
