@@ -2310,8 +2310,11 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             runCatching {
                 val result = FullLogExporter.exportCsv(this@MainActivity)
-                shareFile(result.file, "text/csv")
-                tvMsg.text = "Tip: CSV exported (${result.count} events)"
+                val mapsFile = AddressResolver.exportRecentMapsSnapshots(this@MainActivity, 5)
+                val files = mutableListOf(result.file)
+                if (mapsFile != null) files.add(mapsFile)
+                shareFiles(files, "text/csv")
+                tvMsg.text = "Tip: CSV exported (${result.count} events)" + if (mapsFile != null) " + maps snapshot" else ""
             }.onFailure { e ->
                 tvMsg.text = "Tip: CSV export failed: ${e.message}"
             }
@@ -2322,8 +2325,11 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             runCatching {
                 val result = FullLogExporter.exportJsonl(this@MainActivity)
-                shareFile(result.file, "application/x-ndjson")
-                tvMsg.text = "Tip: JSONL exported (${result.count} events)"
+                val mapsFile = AddressResolver.exportRecentMapsSnapshots(this@MainActivity, 5)
+                val files = mutableListOf(result.file)
+                if (mapsFile != null) files.add(mapsFile)
+                shareFiles(files, "application/x-ndjson")
+                tvMsg.text = "Tip: JSONL exported (${result.count} events)" + if (mapsFile != null) " + maps snapshot" else ""
             }.onFailure { e ->
                 tvMsg.text = "Tip: JSONL export failed: ${e.message}"
             }
@@ -2331,11 +2337,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shareFile(file: File, mimeType: String) {
-        val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = mimeType
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        shareFiles(listOf(file), mimeType)
+    }
+
+    private fun shareFiles(files: List<File>, mimeType: String) {
+        if (files.isEmpty()) return
+        val uris = ArrayList<Uri>(files.size)
+        files.forEach { f ->
+            uris.add(FileProvider.getUriForFile(this, "${packageName}.fileprovider", f))
+        }
+
+        val intent = if (uris.size == 1) {
+            Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, uris.first())
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                type = "*/*"
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
         }
         startActivity(Intent.createChooser(intent, "Share"))
     }

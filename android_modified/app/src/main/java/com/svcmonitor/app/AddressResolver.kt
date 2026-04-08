@@ -1,7 +1,12 @@
 package com.svcmonitor.app
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -83,6 +88,47 @@ object AddressResolver {
         val abs = "0x${java.lang.Long.toHexString(addr)}"
         val resolved = resolveAddress(pid, addr)
         return if (resolved.isNotEmpty()) "$resolved ($abs)" else "$abs (unmapped)"
+    }
+
+
+
+    fun exportRecentMapsSnapshots(context: Context, limitPerPid: Int = 5): File? {
+        val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val outDir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
+        val outFile = File(outDir, "svc_maps_recent_${ts}.jsonl")
+
+        val snapshotCopy: Map<Int, List<MapsSnapshot>> = synchronized(mapsHistory) {
+            mapsHistory.mapValues { (_, deque) -> deque.toList() }
+        }
+        if (snapshotCopy.isEmpty()) return null
+
+        var lineCount = 0
+        outFile.bufferedWriter().use { w ->
+            snapshotCopy.forEach { (pid, snapshots) ->
+                snapshots.takeLast(limitPerPid.coerceAtLeast(1)).forEach { snap ->
+                    val obj = JSONObject()
+                    obj.put("pid", pid)
+                    obj.put("ts_ms", snap.tsMs)
+                    obj.put("region_count", snap.regionCount)
+                    obj.put("total_size", snap.totalSize)
+                    val regions = JSONArray()
+                    snap.regions.forEach { r ->
+                        regions.put(JSONObject().apply {
+                            put("start", r.start)
+                            put("end", r.end)
+                            put("perms", r.perms)
+                            put("map_offset", r.mapOffset)
+                            put("path", r.path)
+                        })
+                    }
+                    obj.put("regions", regions)
+                    w.write(obj.toString())
+                    w.newLine()
+                    lineCount++
+                }
+            }
+        }
+        return if (lineCount > 0) outFile else null
     }
 
     private suspend fun getMapsRegions(pid: Int): List<MapRegion>? {
