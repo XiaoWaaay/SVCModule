@@ -32,6 +32,17 @@ object AddressResolver {
     private const val MAPS_TTL_MS = 5000L
     private const val MAX_SNAPSHOTS_PER_PID = 5
 
+    fun getRecentSnapshotSummaries(pid: Int, limit: Int = 5): List<String> {
+        if (pid <= 0) return emptyList()
+        val snapshots = synchronized(mapsHistory) {
+            mapsHistory[pid]?.toList().orEmpty()
+        }
+        if (snapshots.isEmpty()) return emptyList()
+        return snapshots.takeLast(limit.coerceAtLeast(1)).reversed().map {
+            "ts=${Date(it.tsMs)} regions=${it.regionCount} total_size=${it.totalSize}"
+        }
+    }
+
     /**
      * Resets tracking for a PID (e.g., when starting to monitor a new app).
      */

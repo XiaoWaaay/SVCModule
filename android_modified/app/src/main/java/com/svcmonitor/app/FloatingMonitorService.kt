@@ -29,8 +29,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.*
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -777,16 +775,11 @@ class FloatingMonitorService : Service() {
                 val outFile = File(exportDir, "svc_floating_${System.currentTimeMillis()}.csv")
                 val count = withContext(Dispatchers.IO) {
                     BufferedWriter(FileWriter(outFile)).use { w ->
-                        w.write("seq,nr,name,tgid,pid,uid,comm,pc_resolved,caller_resolved,bt_resolved,desc")
+                        w.write(ExportEventFormatter.csvHeader())
                         w.newLine()
                         var count = 0
                         for (e in events) {
-                            val resolved = resolveEventFields(e)
-                            val comm = e.comm.replace("\"", "\"\"")
-                            val desc = e.desc.replace("\"", "\"\"")
-                            w.write("${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},\"$comm\",")
-                            w.write("\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",")
-                            w.write("\"$desc\"")
+                            w.write(ExportEventFormatter.toCsvLine(e))
                             w.newLine()
                             count++
                         }
@@ -820,30 +813,7 @@ class FloatingMonitorService : Service() {
                     BufferedWriter(FileWriter(outFile)).use { w ->
                         var count = 0
                         for (e in events) {
-                            val resolved = resolveEventFields(e)
-                            val obj = JSONObject().apply {
-                                put("seq", e.seq)
-                                put("nr", e.nr)
-                                put("name", e.name)
-                                put("tgid", e.tgid)
-                                put("pid", e.pid)
-                                put("uid", e.uid)
-                                put("comm", e.comm)
-                                put("pc", e.pc)
-                                put("pc_resolved", resolved["pc"])
-                                put("caller", e.caller)
-                                put("caller_resolved", resolved["caller"])
-                                put("fp", e.fp)
-                                put("sp", e.sp)
-                                put("bt", JSONArray(e.bt))
-                                put("bt_resolved", resolved["bt"])
-                                put("clone_fn", e.cloneFn)
-                                put("ret", e.ret)
-                                put("a0", e.a0); put("a1", e.a1); put("a2", e.a2)
-                                put("a3", e.a3); put("a4", e.a4); put("a5", e.a5)
-                                put("desc", e.desc)
-                            }
-                            w.write(obj.toString())
+                            w.write(ExportEventFormatter.toJsonObject(e).toString())
                             w.newLine()
                             count++
                         }
@@ -861,15 +831,6 @@ class FloatingMonitorService : Service() {
             }
         }
     }
-    private suspend fun resolveEventFields(e: StatusParser.SvcEvent): Map<String, String> {
-        val pcRes = AddressResolver.formatAddrSoOffset(e.tgid, e.pc)
-        val callerRes = AddressResolver.formatAddrSoOffset(e.tgid, e.caller)
-        val btRes = if (e.bt.isNotEmpty()) {
-            e.bt.map { addr -> AddressResolver.formatAddrSoOffset(e.tgid, addr) }.joinToString(" ")
-        } else ""
-        return mapOf("pc" to pcRes, "caller" to callerRes, "bt" to btRes)
-    }
-
     private fun shareExportFile(file: File, mimeType: String) {
         try {
             val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)

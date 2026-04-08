@@ -2317,13 +2317,10 @@ class MainActivity : AppCompatActivity() {
                 val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val f = File(getExternalFilesDir(null), "svc_events_resolved_$ts.csv")
                 f.bufferedWriter().use { w ->
-                    w.write("seq,nr,name,tgid,pid,uid,comm,pc_resolved,caller_resolved,bt_resolved,desc")
+                    w.write(ExportEventFormatter.csvHeader())
                     w.newLine()
                     for (e in events) {
-                        val resolved = resolveEventFields(e)
-                        w.write("${e.seq},${e.nr},${e.name},${e.tgid},${e.pid},${e.uid},${e.comm},")
-                        w.write("\"${resolved["pc"]}\",\"${resolved["caller"]}\",\"${resolved["bt"]}\",")
-                        w.write("\"${e.desc.replace("\"", "\"\"")}\"")
+                        w.write(ExportEventFormatter.toCsvLine(e))
                         w.newLine()
                     }
                 }
@@ -2346,30 +2343,7 @@ class MainActivity : AppCompatActivity() {
                 val f = File(getExternalFilesDir(null), "svc_events_resolved_$ts.json")
                 val arr = JSONArray()
                 for (e in events) {
-                    val resolved = resolveEventFields(e)
-                    val obj = JSONObject().apply {
-                        put("seq", e.seq)
-                        put("nr", e.nr)
-                        put("name", e.name)
-                        put("tgid", e.tgid)
-                        put("pid", e.pid)
-                        put("uid", e.uid)
-                        put("comm", e.comm)
-                        put("pc", e.pc)
-                        put("pc_resolved", resolved["pc"])
-                        put("caller", e.caller)
-                        put("caller_resolved", resolved["caller"])
-                        put("fp", e.fp)
-                        put("sp", e.sp)
-                        put("bt", JSONArray(e.bt))
-                        put("bt_resolved", resolved["bt"])
-                        put("clone_fn", e.cloneFn)
-                        put("ret", e.ret)
-                        put("a0", e.a0); put("a1", e.a1); put("a2", e.a2)
-                        put("a3", e.a3); put("a4", e.a4); put("a5", e.a5)
-                        put("desc", e.desc)
-                    }
-                    arr.put(obj)
+                    arr.put(ExportEventFormatter.toJsonObject(e))
                 }
                 f.writeText(arr.toString(2))
                 f
