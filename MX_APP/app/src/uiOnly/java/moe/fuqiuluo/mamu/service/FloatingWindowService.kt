@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
@@ -13,10 +14,13 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.WindowManager
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import moe.fuqiuluo.mamu.MainActivity
 import moe.fuqiuluo.mamu.R
-import moe.fuqiuluo.mamu.databinding.FloatingFullscreenLayoutBinding
 import moe.fuqiuluo.mamu.databinding.FloatingWindowLayoutBinding
 
 private const val CHANNEL_ID = "floating_ui_only"
@@ -25,16 +29,22 @@ private const val NOTIFICATION_ID = 1001
 class FloatingWindowService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var iconBinding: FloatingWindowLayoutBinding
-    private lateinit var panelBinding: FloatingFullscreenLayoutBinding
+    private lateinit var panelView: FrameLayout
     private var showingPanel = false
+
+    private val overlayType: Int
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            @Suppress("DEPRECATION")
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
 
     private val iconParams by lazy {
         WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else WindowManager.LayoutParams.TYPE_PHONE,
+            overlayType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
@@ -48,9 +58,7 @@ class FloatingWindowService : Service() {
         WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else WindowManager.LayoutParams.TYPE_PHONE,
+            overlayType,
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         )
@@ -63,10 +71,9 @@ class FloatingWindowService : Service() {
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         iconBinding = FloatingWindowLayoutBinding.inflate(LayoutInflater.from(this))
-        panelBinding = FloatingFullscreenLayoutBinding.inflate(LayoutInflater.from(this))
+        panelView = createSimplePanelView()
 
         iconBinding.root.setOnClickListener { togglePanel() }
-        panelBinding.root.setOnClickListener { togglePanel() }
         iconBinding.root.setOnTouchListener(DragTouchListener())
 
         windowManager.addView(iconBinding.root, iconParams)
@@ -76,7 +83,7 @@ class FloatingWindowService : Service() {
 
     override fun onDestroy() {
         if (::iconBinding.isInitialized) runCatching { windowManager.removeView(iconBinding.root) }
-        if (::panelBinding.isInitialized && showingPanel) runCatching { windowManager.removeView(panelBinding.root) }
+        if (::panelView.isInitialized && showingPanel) runCatching { windowManager.removeView(panelView) }
         super.onDestroy()
     }
 
@@ -84,17 +91,70 @@ class FloatingWindowService : Service() {
 
     private fun togglePanel() {
         if (showingPanel) {
-            windowManager.removeView(panelBinding.root)
+            windowManager.removeView(panelView)
             showingPanel = false
         } else {
-            windowManager.addView(panelBinding.root, panelParams)
+            windowManager.addView(panelView, panelParams)
             showingPanel = true
         }
     }
 
+    private fun createSimplePanelView(): FrameLayout {
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(0xAA000000.toInt())
+        }
+
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#1E1E1E"))
+            setPadding(48, 48, 48, 48)
+        }
+
+        val title = TextView(this).apply {
+            text = "MX Floating UI"
+            textSize = 20f
+            setTextColor(Color.WHITE)
+        }
+
+        val subtitle = TextView(this).apply {
+            text = "UI-only mode is active. Core functions were removed intentionally."
+            setTextColor(Color.LTGRAY)
+            setPadding(0, 16, 0, 24)
+        }
+
+        val closeButton = Button(this).apply {
+            text = "Close Panel"
+            setOnClickListener { togglePanel() }
+        }
+
+        val stopButton = Button(this).apply {
+            text = "Stop Floating"
+            setOnClickListener { stopSelf() }
+        }
+
+        content.addView(title)
+        content.addView(subtitle)
+        content.addView(closeButton)
+        content.addView(stopButton)
+
+        val contentParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER
+        ).apply {
+            leftMargin = 32
+            rightMargin = 32
+        }
+
+        root.addView(content, contentParams)
+        root.setOnClickListener { togglePanel() }
+        return root
+    }
+
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Floating UI", NotificationManager.IMPORTANCE_LOW)
+            val channel =
+                NotificationChannel(CHANNEL_ID, "Floating UI", NotificationManager.IMPORTANCE_LOW)
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
