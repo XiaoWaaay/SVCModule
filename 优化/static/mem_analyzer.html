@@ -339,6 +339,8 @@ textarea { resize: vertical; min-height: 100px; }
 .string-table .addr { font-family: var(--mono); color: var(--accent-cyan); }
 .string-table .str-val { font-family: var(--mono); color: var(--accent-green); word-break: break-all; }
 .string-table .str-lib { color: var(--text-muted); font-size: 11px; }
+.resolved-mapped { color: var(--accent-green); font-family: var(--mono); }
+.resolved-unmapped { color: var(--text-muted); font-family: var(--mono); }
 
 /* ── SVC Scanner ── */
 .svc-result {
@@ -1699,7 +1701,7 @@ function renderStrings(strings) {
       <td class="addr">${s.addr || s.address || ''}</td>
       <td>${s.length || s.value?.length || ''}</td>
       <td class="str-val">${escHtml(s.value || s.string || '')}</td>
-      <td class="str-lib">${escHtml(s.library || '')}</td>
+      <td class="str-lib">${formatResolvedCell(s.library || '')}</td>
       <td>
         <button class="btn btn-sm" onclick="jumpToMemory('${s.addr||s.address||''}')">Hex</button>
       </td>
@@ -1769,7 +1771,7 @@ function renderSvcResults(sites) {
     <div class="svc-result">
       <div class="svc-result-header" onclick="toggleSvcDetail(${i})">
         <span class="svc-result-addr">SVC #0 @ ${s.address || s.addr || '?'}</span>
-        <span class="svc-result-lib">${escHtml(s.library || s.lib || '')}</span>
+        <span class="svc-result-lib">${formatResolvedCell(s.library || s.lib || '')}</span>
         <span style="display:flex;gap:6px;">
           <button class="btn btn-sm" onclick="event.stopPropagation();jumpToDisasm('${s.address||s.addr}')">Disasm</button>
           <button class="btn btn-sm" onclick="event.stopPropagation();jumpToMemory('${s.address||s.addr}')">Hex</button>
@@ -2587,6 +2589,12 @@ function genFridaForRegion(addr, size, name) {
 function escHtml(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatResolvedCell(v) {
+  const s = (v || '').toString().trim();
+  if (!s) return '<span class="resolved-unmapped">unmapped</span>';
+  if (s.toLowerCase().includes('(unmapped)')) return `<span class="resolved-unmapped">${escHtml(s)}</span>`;
+  return `<span class="resolved-mapped">${escHtml(s)}</span>`;
 }
 function formatSize(bytes) {
   if (bytes >= 1024*1024*1024) return (bytes/(1024*1024*1024)).toFixed(1) + ' GB';

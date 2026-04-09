@@ -3,8 +3,6 @@ package com.svcmonitor.app
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -28,7 +26,8 @@ object AddressResolver {
         val tsMs: Long,
         val regions: List<MapRegion>,
         val regionCount: Int,
-        val totalSize: Long
+        val totalSize: Long,
+        val rawMaps: String
     )
 
     // Per-PID circular buffer (last 5 snapshots)
@@ -36,6 +35,34 @@ object AddressResolver {
     private val mapsDisabledForPid = HashSet<Int>()
     private const val MAPS_TTL_MS = 5000L
     private const val MAX_SNAPSHOTS_PER_PID = 5
+
+    suspend fun captureSnapshot(pid: Int): Boolean {
+        if (pid <= 0) return false
+        return getMapsRegions(pid)?.isNotEmpty() == true
+    }
+
+    fun persistRecentRawMapsFiles(context: Context, pid: Int, limit: Int = 5): List<File> {
+        if (pid <= 0) return emptyList()
+        val snapshots = synchronized(mapsHistory) {
+            mapsHistory[pid]?.toList().orEmpty()
+        }
+        if (snapshots.isEmpty()) return emptyList()
+
+        val outDir = File(context.getExternalFilesDir(null), "exports/maps_auto").apply { mkdirs() }
+        val selected = snapshots.takeLast(limit.coerceAtLeast(1))
+        val out = ArrayList<File>(selected.size)
+        selected.forEachIndexed { idx, snap ->
+            val file = File(outDir, "svc_maps_pid${pid}_${idx + 1}.txt")
+            file.bufferedWriter().use { w ->
+                w.write("# pid=$pid slot=${idx + 1}/${selected.size} ts_ms=${snap.tsMs} region_count=${snap.regionCount} total_size=${snap.totalSize}")
+                w.newLine()
+                w.write(snap.rawMaps.trimEnd())
+                w.newLine()
+            }
+            out.add(file)
+        }
+        return out
+    }
 
     fun getRecentSnapshotSummaries(pid: Int, limit: Int = 5): List<String> {
         if (pid <= 0) return emptyList()
@@ -95,40 +122,30 @@ object AddressResolver {
     fun exportRecentMapsSnapshots(context: Context, limitPerPid: Int = 5): File? {
         val ts = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val outDir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
-        val outFile = File(outDir, "svc_maps_recent_${ts}.jsonl")
+        val outFile = File(outDir, "svc_maps_recent_${ts}.txt")
 
         val snapshotCopy: Map<Int, List<MapsSnapshot>> = synchronized(mapsHistory) {
             mapsHistory.mapValues { (_, deque) -> deque.toList() }
         }
         if (snapshotCopy.isEmpty()) return null
 
-        var lineCount = 0
+        var snapshotCount = 0
         outFile.bufferedWriter().use { w ->
             snapshotCopy.forEach { (pid, snapshots) ->
-                snapshots.takeLast(limitPerPid.coerceAtLeast(1)).forEach { snap ->
-                    val obj = JSONObject()
-                    obj.put("pid", pid)
-                    obj.put("ts_ms", snap.tsMs)
-                    obj.put("region_count", snap.regionCount)
-                    obj.put("total_size", snap.totalSize)
-                    val regions = JSONArray()
-                    snap.regions.forEach { r ->
-                        regions.put(JSONObject().apply {
-                            put("start", r.start)
-                            put("end", r.end)
-                            put("perms", r.perms)
-                            put("map_offset", r.mapOffset)
-                            put("path", r.path)
-                        })
-                    }
-                    obj.put("regions", regions)
-                    w.write(obj.toString())
+                val selected = snapshots.takeLast(limitPerPid.coerceAtLeast(1))
+                selected.forEachIndexed { idx, snap ->
+                    val header = "# pid=$pid snapshot=${idx + 1}/${selected.size} ts_ms=${snap.tsMs} region_count=${snap.regionCount} total_size=${snap.totalSize}"
+                    w.write(header)
                     w.newLine()
-                    lineCount++
+                    w.write(snap.rawMaps.trimEnd())
+                    w.newLine()
+                    w.write("")
+                    w.newLine()
+                    snapshotCount++
                 }
             }
         }
-        return if (lineCount > 0) outFile else null
+        return if (snapshotCount > 0) outFile else null
     }
 
     private suspend fun getMapsRegions(pid: Int): List<MapRegion>? {
@@ -172,7 +189,7 @@ object AddressResolver {
         }
 
         // Create new snapshot and add to history (keep last 5)
-        val newSnapshot = MapsSnapshot(now, newRegions, newCount, newTotalSize)
+        val newSnapshot = MapsSnapshot(now, newRegions, newCount, newTotalSize, maps)
         history.addLast(newSnapshot)
         while (history.size > MAX_SNAPSHOTS_PER_PID) {
             history.removeFirst()
