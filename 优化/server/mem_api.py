@@ -95,6 +95,31 @@ def parse_maps_line(line):
     }
 
 
+def resolve_addr_from_regions(addr, regions):
+    """Resolve one absolute address using parsed maps regions."""
+    for r in regions:
+        if r["start"] <= addr < r["end"]:
+            name = r.get("name") or "[anonymous]"
+            offset = addr - r["start"]
+            return f"{name}+0x{offset:x} (0x{addr:x})"
+    return f"0x{addr:x} (unmapped)"
+
+
+def load_maps_regions(pid):
+    """Load and parse /proc/<pid>/maps regions via adb."""
+    out, err, rc = adb_shell_su(f"cat /proc/{pid}/maps")
+    if rc != 0 or not out.strip():
+        out, err, rc = adb_shell(f"cat /proc/{pid}/maps")
+    if not out.strip():
+        return [], err
+    regions = []
+    for line in out.strip().split('\n'):
+        r = parse_maps_line(line)
+        if r:
+            regions.append(r)
+    return regions, ""
+
+
 def human_size(n):
     for unit in ['B', 'KB', 'MB', 'GB']:
         if n < 1024:
@@ -522,6 +547,7 @@ def api_mem_strings(pid):
         return jsonify({"error": f"Cannot read memory at 0x{addr:x}"}), 500
 
     raw = bytes.fromhex(hex_str)
+    regions, _ = load_maps_regions(pid)
     strings = []
     current = ""
     current_start = 0
@@ -537,7 +563,7 @@ def api_mem_strings(pid):
                     "addr": f"0x{addr + current_start:x}",
                     "value": current,
                     "length": len(current),
-                    "library": "",  # resolved below if maps loaded
+                    "library": resolve_addr_from_regions(addr + current_start, regions),
                 })
             current = ""
 
@@ -547,7 +573,7 @@ def api_mem_strings(pid):
             "addr": f"0x{addr + current_start:x}",
             "value": current,
             "length": len(current),
-            "library": "",
+            "library": resolve_addr_from_regions(addr + current_start, regions),
         })
 
     return jsonify({
@@ -585,6 +611,7 @@ def api_mem_svc_scan(pid):
     SVC_LE = "010000d4"
     sites = []
     raw = bytes.fromhex(hex_str)
+    regions, _ = load_maps_regions(pid)
 
     # Scan aligned to 4 bytes
     for offset in range(0, len(raw) - 3, 4):
@@ -610,6 +637,7 @@ def api_mem_svc_scan(pid):
             sites.append({
                 "address": f"0x{svc_addr:x}",
                 "offset_in_region": offset,
+                "library": resolve_addr_from_regions(svc_addr, regions),
                 "context": context_insts,
             })
 
@@ -652,6 +680,67 @@ def api_mem_resolve(pid, addr_str):
             })
 
     return jsonify({"region": None, "error": "Address not found in any mapped region"})
+
+
+@mem_bp.route("/api/mem/events/normalize/<int:pid>", methods=["POST"])
+def api_mem_events_normalize(pid):
+    """
+    Normalize incoming event list with minimal fallback resolving.
+    If *_resolved fields are present, keep them.
+    If missing/blank, resolve from current /proc/<pid>/maps.
+    """
+    data = request.get_json(silent=True) or {}
+    events = data.get("events", [])
+    if not isinstance(events, list):
+        return jsonify({"error": "events must be a list"}), 400
+
+    out, err, rc = adb_shell_su(f"cat /proc/{pid}/maps")
+    if rc != 0 or not out.strip():
+        out, err, rc = adb_shell(f"cat /proc/{pid}/maps")
+    if not out.strip():
+        return jsonify({"error": f"Cannot read maps for PID {pid}: {err}"}), 500
+
+    regions = []
+    for line in out.strip().split('\n'):
+        r = parse_maps_line(line)
+        if r:
+            regions.append(r)
+
+    normalized = []
+    for e in events:
+        if not isinstance(e, dict):
+            continue
+        item = dict(e)
+
+        pc_res = str(item.get("pc_resolved", "") or "").strip()
+        if not pc_res:
+            pc = item.get("pc")
+            if isinstance(pc, int):
+                item["pc_resolved"] = resolve_addr_from_regions(pc, regions)
+
+        caller_res = str(item.get("caller_resolved", "") or "").strip()
+        if not caller_res:
+            caller = item.get("caller")
+            if isinstance(caller, int):
+                item["caller_resolved"] = resolve_addr_from_regions(caller, regions)
+
+        bt_res = str(item.get("bt_resolved", "") or "").strip()
+        if not bt_res:
+            bt = item.get("bt", [])
+            if isinstance(bt, list):
+                resolved_bt = []
+                for a in bt:
+                    if isinstance(a, int):
+                        resolved_bt.append(resolve_addr_from_regions(a, regions))
+                item["bt_resolved"] = " ".join(resolved_bt)
+
+        normalized.append(item)
+
+    return jsonify({
+        "pid": pid,
+        "count": len(normalized),
+        "events": normalized
+    })
 
 
 # ═══════════════════════════════════════════════════
